@@ -11,6 +11,7 @@
       --bg: #1a1a1a;
       --bg2: #0a0a0a;
       --bg3: #111111;
+      --sidebar: #0d0d0d;
       --text: #f5f5f0;
       --text2: #d4d4cc;
       --text3: #d4d4cc;
@@ -34,35 +35,45 @@
       --radius-lg: 0;
     }
 
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; font-size: 15px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; font-size: 15px; display: flex; flex-direction: row; }
 
-    .app { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .app { display: flex; width: 100%; min-height: 100vh; }
 
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
-    header h1 { font-size: 22px; font-weight: 600; color: var(--text); }
-    header span { font-size: 20px; font-weight: 700; color: var(--gold); }
+    /* Sidebar */
+    .sidebar { width: 200px; background: var(--sidebar); border-right: 1px solid #333; display: flex; flex-direction: column; padding: 1.5rem 1rem; position: fixed; top: 0; bottom: 0; left: 0; z-index: 50; }
+    .brand { margin-bottom: 2.5rem; }
+    .brand h1 { font-size: 20px; font-weight: 600; color: var(--gold); }
+    .brand span { font-size: 14px; font-weight: 600; color: var(--text2); display: block; margin-top: 4px; }
+    .nav-links { display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { padding: 12px 14px; font-size: 15px; font-weight: 600; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 12px; transition: all 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { background: #181818; color: var(--text); }
+    .nav-item.active { background: #1a1a1a; color: var(--gold); border-left-color: var(--gold); }
+    .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
 
-    .tabs { display: flex; gap: 12px; margin-bottom: 2rem; flex-wrap: wrap; }
-    .tab { padding: 14px 28px; border: 1px solid var(--gold); border-radius: 9999px; background: var(--bg2); font-size: 15px; cursor: pointer; color: var(--gold); font-weight: 600; }
-    .tab.active { background: var(--gold); color: #0a0a0a; }
-    .tab:hover:not(.active) { background: var(--bg3); }
+    /* Main Content */
+    .main-content { margin-left: 200px; flex: 1; padding: 2rem; max-width: calc(100% - 200px); min-height: 100vh; }
+    
+    .today-stats { display: flex; gap: 12px; margin-bottom: 2rem; flex-wrap: wrap; }
+    .today-pill { background: #111; border: 1px solid var(--gold); padding: 8px 16px; font-size: 14px; font-weight: 600; color: var(--gold); display: flex; align-items: center; gap: 8px; }
 
-    .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 2rem; }
+    .pipeline-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 2rem; }
     .stat { background: var(--bg); padding: 20px; border-bottom: 3px solid var(--gold); }
     .stat-label { font-size: 14px; color: var(--text2); margin-bottom: 8px; font-weight: 500; }
     .stat-val { font-size: 36px; font-weight: 600; color: var(--gold); }
+
+    .funnel { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 2rem; }
+    .funnel-stage { background: #111; border: 1px solid #333; padding: 16px; text-align: center; border-bottom: 2px solid var(--gold); }
+    .funnel-stage.won { border-bottom-color: var(--green-text); }
+    .funnel-stage.lost { border-bottom-color: #555; }
+    .f-label { font-size: 13px; color: var(--text2); font-weight: 500; text-transform: uppercase; margin-bottom: 8px; }
+    .f-val { font-size: 28px; font-weight: 600; color: var(--text); }
 
     .card { background: var(--bg); border: 1px solid var(--gold); padding: 1.5rem; margin-bottom: 1.5rem; }
     .card-title { font-size: 18px; font-weight: 600; margin-bottom: 1.25rem; color: var(--gold); }
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     label { font-size: 14px; color: var(--text2); display: block; margin-bottom: 6px; font-weight: 500; }
-    input, select, textarea {
-      width: 100%; font-size: 15px; padding: 12px 14px;
-      border: 1px solid #333; border-radius: 0;
-      background: var(--bg3); color: var(--text); outline: none; transition: border-color 0.2s;
-    }
+    input, select, textarea { width: 100%; font-size: 15px; padding: 12px 14px; border: 1px solid #333; border-radius: 0; background: var(--bg3); color: var(--text); outline: none; transition: border-color 0.2s; }
     input:focus, select:focus, textarea:focus { border-color: var(--gold); }
     textarea { resize: vertical; min-height: 80px; }
 
@@ -106,11 +117,16 @@
     .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 1.5rem; color: var(--gold); text-transform: uppercase; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 2rem; flex-wrap: wrap; }
 
+    .script-box { background: #111; border: 1px solid #333; padding: 14px; margin-bottom: 1rem; border-left: 3px solid var(--gold); }
+    .script-content { font-size: 14px; color: var(--text2); font-style: italic; line-height: 1.5; margin-top: 10px; display: none; }
+    .script-content.open { display: block; }
+    .script-toggle { font-size: 13px; color: var(--gold); cursor: pointer; font-weight: 600; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
+
     .history-item { font-size: 14px; color: var(--text2); padding: 12px 0; border-bottom: 1px solid #333; }
     .history-item:last-child { border-bottom: none; }
     .history-day { font-weight: 600; color: var(--gold); }
 
-    .empty { text-align: center; padding: 4rem; color: var(--text3); font-size: 16px; }
+    .empty { text-align: center; padding: 4rem; color: var(--text3); font-size: 16px; border: 1px dashed #333; }
     .loading { text-align: center; padding: 4rem; color: var(--text3); font-size: 16px; }
 
     .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--gold); color: #0a0a0a; padding: 14px 28px; font-size: 16px; font-weight: 600; opacity: 0; transition: opacity 0.2s; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
@@ -123,17 +139,26 @@
     .setup-screen input { margin-bottom: 16px; }
     .code { font-family: monospace; font-size: 14px; background: var(--bg3); padding: 16px; border: 1px solid #333; color: var(--text); margin-bottom: 1.5rem; white-space: pre-wrap; word-break: break-all; }
 
-    @media (max-width: 600px) {
-      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .app { flex-direction: column; }
+      .sidebar { position: fixed; top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; z-index: 100; }
+      .brand { display: none; }
+      .main-content { margin-left: 0; max-width: 100%; padding: 1rem; padding-bottom: 80px; }
+      .nav-links { flex-direction: row; width: 100%; justify-content: space-around; padding: 0; }
+      .nav-item { flex-direction: column; padding: 6px 0; border-left: none; gap: 4px; font-size: 11px; width: 100%; justify-content: center; border-top: 3px solid transparent; }
+      .nav-item.active { border-left-color: transparent; border-top-color: var(--gold); background: #111; }
+      .form-row { grid-template-columns: 1fr; }
       .due-card { flex-direction: column; align-items: flex-start; gap: 14px; }
       .due-actions { width: 100%; justify-content: flex-end; }
+      .pipeline-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .funnel { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
 <body>
 
-<div id="setup-screen" class="app setup-screen" style="display:none">
+<div id="setup-screen" class="app setup-screen" style="display:none; flex-direction:column;">
   <div class="card">
     <div class="card-title">Firebase setup</div>
     <p>To use this tracker across devices, you need a free Firebase project. Follow the steps in the README, then paste your config values below.</p>
@@ -150,138 +175,118 @@
 </div>
 
 <div id="main-app" class="app" style="display:none">
-  <header>
-    <h1>Call Tracker</h1>
-    <span id="header-date"></span>
-  </header>
-
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
-    <button class="tab" onclick="showTab('add')">Add company</button>
-    <button class="tab" onclick="showTab('all')">All companies</button>
-    <button class="tab" onclick="showTab('scripts')">Scripts</button>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="tab-dashboard">
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Total companies</div><div class="stat-val" id="s-total">—</div></div>
-      <div class="stat"><div class="stat-label">Due today</div><div class="stat-val" id="s-today">—</div></div>
-      <div class="stat"><div class="stat-label">Overdue</div><div class="stat-val" id="s-overdue">—</div></div>
-      <div class="stat"><div class="stat-label">Demos booked</div><div class="stat-val" id="s-demos">—</div></div>
+  
+  <div class="sidebar">
+    <div class="brand">
+      <h1>Call Tracker</h1>
+      <span id="header-date"></span>
     </div>
-    <div id="due-overdue-section" class="due-section"></div>
-    <div id="due-today-section" class="due-section"></div>
-    <div id="due-upcoming-section" class="due-section"></div>
-  </div>
-
-  <!-- ADD -->
-  <div id="tab-add" style="display:none">
-    <div class="card">
-      <div class="card-title">Add new roofing company</div>
-      <div class="form-row">
-        <div><label>Company name *</label><input id="f-name" type="text" placeholder="ABC Roofing"></div>
-        <div><label>Owner name</label><input id="f-owner" type="text" placeholder="Ben"></div>
+    <div class="nav-links">
+      <div class="nav-item active" onclick="showTab('today')" id="nav-today">
+        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg> Today
       </div>
-      <div class="form-row">
-        <div><label>Phone</label><input id="f-phone" type="text" placeholder="(555) 000-0000"></div>
-        <div><label>City / Area</label><input id="f-city" type="text" placeholder="Providence, RI"></div>
+      <div class="nav-item" onclick="showTab('pipeline')" id="nav-pipeline">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> Pipeline
       </div>
-      <div class="form-row">
-        <div><label>Problem identified</label><select id="f-problem">
-          <option value="">— select —</option>
-          <option>Missed calls</option>
-          <option>Low reviews</option>
-          <option>Website glitch</option>
-          <option>Multiple problems</option>
-        </select></div>
-        <div><label>Next step offer</label><select id="f-offer">
-          <option value="">— select —</option>
-          <option>Receptionist demo</option>
-          <option>Website demo</option>
-          <option>Review capture chat</option>
-        </select></div>
+      <div class="nav-item" onclick="showTab('add')" id="nav-add">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Company
       </div>
-      <div class="form-row">
-        <div><label>First call date *</label><input id="f-date" type="date"></div>
-        <div><label>Website URL</label><input id="f-website" type="text" placeholder="abcroofing.com"></div>
+      <div class="nav-item" onclick="showTab('all')" id="nav-all">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> All Companies
       </div>
-      <div style="margin-bottom:10px"><label>Notes</label><textarea id="f-notes" placeholder="What did you notice? Any context before the first call..."></textarea></div>
-      <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="addCompany()">Add company</button></div>
     </div>
   </div>
 
-  <!-- ALL -->
-  <div id="tab-all" style="display:none">
-    <div class="search-row">
-      <input type="text" id="search" placeholder="Search by company or owner..." oninput="renderAll()">
-      <select id="filter-status" onchange="renderAll()">
-        <option value="">All statuses</option>
-        <option>Active</option>
-        <option>Demo booked</option>
-        <option>Closed — won</option>
-        <option>Closed — lost</option>
-      </select>
+  <div class="main-content">
+    
+    <!-- TODAY -->
+    <div id="tab-today">
+      <div class="today-stats">
+        <div class="today-pill">Due today: <span id="s-today">0</span></div>
+        <div class="today-pill" style="border-color:var(--red-text);color:var(--red-text)">Overdue: <span id="s-overdue">0</span></div>
+        <div class="today-pill" style="border-color:#555;color:var(--text2)">Demos this week: <span id="s-demos-week">0</span></div>
+      </div>
+      <div id="due-followup-section" class="due-section"></div>
+      <div id="due-new-section" class="due-section"></div>
     </div>
-    <div class="card" style="padding:0;overflow:hidden">
-      <table>
-        <thead><tr>
-          <th>Company</th><th>Owner</th><th>Problem</th><th>Call day</th><th>Next follow-up</th><th>Status</th><th></th>
-        </tr></thead>
-        <tbody id="all-table"></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- SCRIPTS -->
-  <div id="tab-scripts" style="display:none">
-    <div class="card">
-      <div class="card-title">Quick reference — call scripts</div>
-      <div style="display:grid;gap:1rem">
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text)">Gatekeeper — routing attempt</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"Hi, I'm calling for [Owner]. Could you route me to his office?"</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:4px;padding:0 4px">If asked what it's regarding: <span style="font-style:italic">"It's regarding the lead flow on the website."</span> — then stop talking.</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Missed calls</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I'll be quick — I noticed your office line doesn't have a backup for when you're on another call or after hours. For a roofing company, that's usually costing you contracts you don't even know you lost. That's why I'm calling — would a quick demo make sense, even just 10 minutes?"</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Low reviews</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I pulled up your reviews and your count is lower than a few competitors in the area. Homeowners check that before they call — if you're not showing up strong, they're skipping you before you ever get a shot. Would it be totally crazy to do a 10-minute chat to see if this is a fit?"</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Website glitch</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I was on your site and ran into some issues that would make it hard for a customer to actually contact you. You're burning your marketing budget when that happens — that's why I'm calling. Would you be open to a quick demo of a cleaner setup?"</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 3 — Force clarity</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan — I called earlier this week about your lead flow. Just following up to see if it's worth a quick two-minute conversation, or if I should close the loop here."</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 5 — Decision point</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I've reached out a couple times about your lead flow. Before I move on, I want to give you the opportunity for a clear yes or no. No hard feelings either way."</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 7 — Close the loop</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I've reached out a few times about protecting your lead flow. I'm going to close the loop on my end — no hard feelings. If the timing ever changes, you know where to find me. Take care."</div>
-        </div>
-
-        <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:6px">No answer voicemail — Day 1</div>
-          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"Hey [Owner], this is Dylan — I'll keep it short. I was looking at your setup and noticed something around your lead flow that's worth a two-minute conversation. I'll try you again in a couple days. Talk soon."</div>
-        </div>
-
+    <!-- PIPELINE -->
+    <div id="tab-pipeline" style="display:none">
+      <div class="pipeline-stats">
+        <div class="stat"><div class="stat-label">Total companies</div><div class="stat-val" id="s-total">—</div></div>
+        <div class="stat"><div class="stat-label">Due today</div><div class="stat-val" id="s-pipe-today">—</div></div>
+        <div class="stat"><div class="stat-label">Overdue</div><div class="stat-val" id="s-pipe-overdue">—</div></div>
+        <div class="stat"><div class="stat-label">Demos booked</div><div class="stat-val" id="s-pipe-demos">—</div></div>
+      </div>
+      
+      <div class="card-title" style="margin-bottom:1rem;">Pipeline Breakdown</div>
+      <div class="funnel">
+        <div class="funnel-stage"><div class="f-label">Day 1</div><div class="f-val" id="f-day1">0</div></div>
+        <div class="funnel-stage"><div class="f-label">Day 3</div><div class="f-val" id="f-day3">0</div></div>
+        <div class="funnel-stage"><div class="f-label">Day 5</div><div class="f-val" id="f-day5">0</div></div>
+        <div class="funnel-stage"><div class="f-label">Day 7</div><div class="f-val" id="f-day7">0</div></div>
+        <div class="funnel-stage won"><div class="f-label">Won</div><div class="f-val" id="f-won">0</div></div>
+        <div class="funnel-stage lost"><div class="f-label">Lost</div><div class="f-val" id="f-lost">0</div></div>
       </div>
     </div>
+
+    <!-- ADD -->
+    <div id="tab-add" style="display:none">
+      <div class="card">
+        <div class="card-title">Add new company</div>
+        <div class="form-row">
+          <div><label>Company name *</label><input id="f-name" type="text" placeholder="ABC Roofing"></div>
+          <div><label>Owner name</label><input id="f-owner" type="text" placeholder="Ben"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Phone</label><input id="f-phone" type="text" placeholder="(555) 000-0000"></div>
+          <div><label>Website URL</label><input id="f-website" type="text" placeholder="abcroofing.com"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Problem identified</label><select id="f-problem" onchange="autoFillOffer()">
+            <option value="">— select —</option>
+            <option>Missed calls</option>
+            <option>Low reviews</option>
+            <option>Website glitch</option>
+            <option>Multiple problems</option>
+          </select></div>
+          <div><label>Next step offer</label><select id="f-offer">
+            <option value="">— select —</option>
+            <option>Receptionist demo</option>
+            <option>Website demo</option>
+            <option>Review capture chat</option>
+          </select></div>
+        </div>
+        <div class="form-row" style="grid-template-columns: 1fr;">
+          <div><label>First call date *</label><input id="f-date" type="date"></div>
+        </div>
+        <div style="margin-bottom:16px"><label>Notes</label><textarea id="f-notes" placeholder="What did you notice? Any context before the first call..."></textarea></div>
+        <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="addCompany()">Add company</button></div>
+      </div>
+    </div>
+
+    <!-- ALL -->
+    <div id="tab-all" style="display:none">
+      <div class="search-row">
+        <input type="text" id="search" placeholder="Search by company or owner..." oninput="renderAll()">
+        <select id="filter-status" onchange="renderAll()">
+          <option value="">All statuses</option>
+          <option>Active</option>
+          <option>Demo booked</option>
+          <option>Closed — won</option>
+          <option>Closed — lost</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr>
+            <th>Company</th><th>Owner</th><th>Problem</th><th>Call day</th><th>Next follow-up</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody id="all-table"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -302,6 +307,33 @@
 <script>
 const DAYS = [1, 3, 5, 7];
 const DAY_GAPS = { 1: 0, 3: 2, 5: 2, 7: 2 };
+const SCRIPTS = {
+  gatekeeper: `"Hi, I'm calling for [Owner]. Could you route me to his office?"<br><span style="font-size:12px;color:var(--text3)">If asked regarding: "It's regarding the lead flow on the website."</span>`,
+  day1_Missed_calls: `"[Owner], I'm Dylan. I'll be quick — I noticed your office line doesn't have a backup for when you're on another call or after hours. For a roofing company, that's usually costing you contracts you don't even know you lost. That's why I'm calling — would a quick demo make sense, even just 10 minutes?"`,
+  day1_Low_reviews: `"[Owner], I'm Dylan. I pulled up your reviews and your count is lower than a few competitors in the area. Homeowners check that before they call — if you're not showing up strong, they're skipping you before you ever get a shot. Would it be totally crazy to do a 10-minute chat to see if this is a fit?"`,
+  day1_Website_glitch: `"[Owner], I'm Dylan. I was on your site and ran into some issues that would make it hard for a customer to actually contact you. You're burning your marketing budget when that happens — that's why I'm calling. Would you be open to a quick demo of a cleaner setup?"`,
+  day1_Multiple_problems: `"[Owner], I'm Dylan. I was looking at your setup online and noticed a few dropped balls around lead flow that are likely burning contracts. That's why I'm calling — would a quick demo make sense, even just 10 minutes?"`,
+  day3: `"[Owner], I'm Dylan — I called earlier this week about your lead flow. Just following up to see if it's worth a quick two-minute conversation, or if I should close the loop here."`,
+  day5: `"[Owner], I've reached out a couple times about your lead flow. Before I move on, I want to give you the opportunity for a clear yes or no. No hard feelings either way."`,
+  day7: `"[Owner], I'm Dylan. I've reached out a few times about protecting your lead flow. I'm going to close the loop on my end — no hard feelings. If the timing ever changes, you know where to find me. Take care."`,
+  voicemail: `"Hey [Owner], this is Dylan — I'll keep it short. I was looking at your setup and noticed something around your lead flow that's worth a two-minute conversation. I'll try you again in a couple days. Talk soon."`
+};
+
+function getScript(day, problem) {
+  if (day === 1) {
+    const key = 'day1_' + (problem || '').replace(/ /g, '_');
+    return SCRIPTS[key] || SCRIPTS.day1_Missed_calls;
+  }
+  if (day === 3) return SCRIPTS.day3;
+  if (day === 5) return SCRIPTS.day5;
+  if (day === 7) return SCRIPTS.day7;
+  return "";
+}
+
+function toggleScript() {
+  const el = document.getElementById('script-content');
+  el.classList.toggle('open');
+}
 
 let companies = [];
 let db = null;
@@ -329,7 +361,7 @@ function initFirebase(cfg) {
     document.getElementById('main-app').style.display = '';
     listenToData();
   } catch (e) {
-    alert('Firebase connection failed. Check your config values and try again.\n\n' + e.message);
+    alert('Firebase connection failed. Check your config values and try again.\\n\\n' + e.message);
   }
 }
 
@@ -338,8 +370,9 @@ function listenToData() {
   db.ref('companies').on('value', snap => {
     const val = snap.val() || {};
     companies = Object.values(val);
-    renderDashboard();
-    renderAll();
+    if (document.getElementById('tab-today').style.display !== 'none') renderToday();
+    if (document.getElementById('tab-pipeline').style.display !== 'none') renderPipeline();
+    if (document.getElementById('tab-all').style.display !== 'none') renderAll();
   });
 }
 async function pushCompany(c) {
@@ -388,76 +421,104 @@ function showToast(msg) {
 
 // ── Tabs ──────────────────────────────────────────────────────
 function showTab(t) {
-  ['dashboard','add','all','scripts'].forEach(x => {
-    document.getElementById('tab-' + x).style.display = x === t ? '' : 'none';
+  ['today','pipeline','add','all'].forEach(x => {
+    const el = document.getElementById('tab-' + x);
+    if (el) el.style.display = x === t ? '' : 'none';
   });
-  document.querySelectorAll('.tab').forEach((el, i) => {
-    el.classList.toggle('active', ['dashboard','add','all','scripts'][i] === t);
+  ['today','pipeline','add','all'].forEach(x => {
+    const el = document.getElementById('nav-' + x);
+    if (el) el.classList.toggle('active', x === t);
   });
   if (t === 'all') renderAll();
-  if (t === 'dashboard') renderDashboard();
+  if (t === 'today') renderToday();
+  if (t === 'pipeline') renderPipeline();
 }
 
-// ── Dashboard ─────────────────────────────────────────────────
-function renderDashboard() {
+// ── Today ───────────────────────────────────────────────────
+function dueCard(c, urgency, tod) {
+  const nd = nextCallDate(c);
+  const dayNum = nextCallDay(c);
+  const diff = daysDiff(nd, tod);
+  const badge = urgency === 'overdue'
+    ? `<span class="badge badge-due">Overdue ${Math.abs(diff)}d</span>`
+    : urgency === 'today'
+    ? `<span class="badge badge-today">Today</span>`
+    : `<span class="badge badge-pending">In ${diff}d — ${fmtDate(nd)}</span>`;
+  return `<div class="due-card">
+    <div class="due-info">
+      <div class="due-name">${c.name}${c.owner ? ' — ' + c.owner : ''}</div>
+      <div class="due-sub">
+        <span>${c.problem || 'No problem noted'}</span>
+        <span>Day ${dayNum} call</span>
+        ${badge}
+        ${c.phone ? `<span>${c.phone}</span>` : ''}
+      </div>
+    </div>
+    <div class="due-actions">
+      <button class="btn btn-sm btn-primary" onclick="openLog('${c.id}')">Log call</button>
+      <button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button>
+    </div>
+  </div>`;
+}
+
+function renderToday() {
   const tod = today();
-  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
-  document.getElementById('s-total').textContent = companies.length;
+  const dateEl = document.getElementById('header-date');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+  
   const active = companies.filter(c => getStatus(c) === 'Active');
   const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod; });
   const todayDue = active.filter(c => nextCallDate(c) === tod);
-  const upcoming = active.filter(c => { const nd = nextCallDate(c); return nd && nd > tod; })
-    .sort((a,b) => nextCallDate(a) > nextCallDate(b) ? 1 : -1).slice(0, 8);
   const demos = companies.filter(c => c.status === 'Demo booked').length;
 
-  document.getElementById('s-today').textContent = todayDue.length;
-  document.getElementById('s-overdue').textContent = overdue.length;
-  document.getElementById('s-demos').textContent = demos;
+  const sToday = document.getElementById('s-today');
+  const sOverdue = document.getElementById('s-overdue');
+  const sDemosWeek = document.getElementById('s-demos-week');
+  if (sToday) sToday.textContent = todayDue.length;
+  if (sOverdue) sOverdue.textContent = overdue.length;
+  if (sDemosWeek) sDemosWeek.textContent = demos;
 
-  function dueCard(c, urgency) {
-    const nd = nextCallDate(c);
-    const dayNum = nextCallDay(c);
-    const diff = daysDiff(nd, tod);
-    const badge = urgency === 'overdue'
-      ? `<span class="badge badge-due">Overdue ${Math.abs(diff)}d</span>`
-      : urgency === 'today'
-      ? `<span class="badge badge-today">Today</span>`
-      : `<span class="badge badge-pending">In ${diff}d — ${fmtDate(nd)}</span>`;
-    return `<div class="due-card">
-      <div class="due-info">
-        <div class="due-name">${c.name}${c.owner ? ' — ' + c.owner : ''}</div>
-        <div class="due-sub">
-          <span>${c.problem || 'No problem noted'}</span>
-          <span>Day ${dayNum} call</span>
-          ${badge}
-          ${c.phone ? `<span>${c.phone}</span>` : ''}
-        </div>
-      </div>
-      <div class="due-actions">
-        <button class="btn btn-sm btn-primary" onclick="openLog('${c.id}')">Log call</button>
-        <button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button>
-      </div>
-    </div>`;
+  const todSec = document.getElementById('due-followup-section');
+  if (todSec) {
+    let q1 = overdue.map(c => dueCard(c,'overdue', tod)).join('') + todayDue.map(c => dueCard(c,'today', tod)).join('');
+    todSec.innerHTML = q1 ? `<div class="due-header">Work Queue (${overdue.length + todayDue.length})</div>` + q1 : `<div class="empty">You're all caught up for today.</div>`;
   }
 
-  const ovSec = document.getElementById('due-overdue-section');
-  ovSec.innerHTML = overdue.length
-    ? `<div class="due-header">Overdue (${overdue.length})</div>` + overdue.map(c => dueCard(c,'overdue')).join('')
-    : '';
+  const upSec = document.getElementById('due-new-section');
+  if (upSec) upSec.innerHTML = '';
+}
 
-  const todSec = document.getElementById('due-today-section');
-  todSec.innerHTML = todayDue.length
-    ? `<div class="due-header">Due today (${todayDue.length})</div>` + todayDue.map(c => dueCard(c,'today')).join('')
-    : '';
+// ── Pipeline ─────────────────────────────────────────────────
+function renderPipeline() {
+  const tod = today();
+  const active = companies.filter(c => getStatus(c) === 'Active');
+  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod; });
+  const todayDue = active.filter(c => nextCallDate(c) === tod);
+  const demos = companies.filter(c => c.status === 'Demo booked').length;
 
-  const upSec = document.getElementById('due-upcoming-section');
-  upSec.innerHTML = upcoming.length
-    ? `<div class="due-header">Coming up</div>` + upcoming.map(c => dueCard(c,'upcoming')).join('')
-    : '';
+  const sTotal = document.getElementById('s-total');
+  if (sTotal) sTotal.textContent = companies.length;
+  const sPipeToday = document.getElementById('s-pipe-today');
+  if (sPipeToday) sPipeToday.textContent = todayDue.length;
+  const sPipeOverdue = document.getElementById('s-pipe-overdue');
+  if (sPipeOverdue) sPipeOverdue.textContent = overdue.length;
+  const sPipeDemos = document.getElementById('s-pipe-demos');
+  if (sPipeDemos) sPipeDemos.textContent = demos;
 
-  if (!overdue.length && !todayDue.length && !upcoming.length && !companies.length) {
-    ovSec.innerHTML = `<div class="empty">No companies tracked yet — add your first one above.</div>`;
-  }
+  const f1 = active.filter(c => nextCallDay(c) === 1).length;
+  const f3 = active.filter(c => nextCallDay(c) === 3).length;
+  const f5 = active.filter(c => nextCallDay(c) === 5).length;
+  const f7 = active.filter(c => nextCallDay(c) === 7).length;
+  const fWon = companies.filter(c => c.status === 'Closed — won' || c.status === 'Demo booked').length;
+  const fLost = companies.filter(c => c.status === 'Closed — lost' || c.status === 'Loop closed').length;
+
+  const getF = id => document.getElementById(id);
+  if (getF('f-day1')) getF('f-day1').textContent = f1;
+  if (getF('f-day3')) getF('f-day3').textContent = f3;
+  if (getF('f-day5')) getF('f-day5').textContent = f5;
+  if (getF('f-day7')) getF('f-day7').textContent = f7;
+  if (getF('f-won')) getF('f-won').textContent = fWon;
+  if (getF('f-lost')) getF('f-lost').textContent = fLost;
 }
 
 // ── All companies ─────────────────────────────────────────────
@@ -499,6 +560,14 @@ function renderAll() {
 }
 
 // ── Add company ───────────────────────────────────────────────
+function autoFillOffer() {
+  const prob = document.getElementById('f-problem').value;
+  const off = document.getElementById('f-offer');
+  if (prob === 'Missed calls') off.value = 'Receptionist demo';
+  else if (prob === 'Low reviews') off.value = 'Review capture chat';
+  else if (prob === 'Website glitch' || prob === 'Multiple problems') off.value = 'Website demo';
+}
+
 async function addCompany() {
   const name = document.getElementById('f-name').value.trim();
   const date = document.getElementById('f-date').value;
@@ -508,7 +577,6 @@ async function addCompany() {
     name,
     owner: document.getElementById('f-owner').value.trim(),
     phone: document.getElementById('f-phone').value.trim(),
-    city: document.getElementById('f-city').value.trim(),
     website: document.getElementById('f-website').value.trim(),
     problem: document.getElementById('f-problem').value,
     offer: document.getElementById('f-offer').value,
@@ -519,11 +587,17 @@ async function addCompany() {
     createdAt: new Date().toISOString()
   };
   await pushCompany(c);
-  ['f-name','f-owner','f-phone','f-city','f-website','f-notes'].forEach(id => document.getElementById(id).value = '');
-  ['f-problem','f-offer'].forEach(id => document.getElementById(id).selectedIndex = 0);
+  ['f-name','f-owner','f-phone','f-website','f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['f-problem','f-offer'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.selectedIndex = 0;
+  });
   document.getElementById('f-date').value = today();
   showToast('Company added');
-  showTab('dashboard');
+  showTab('today');
 }
 
 // ── Log call ──────────────────────────────────────────────────
@@ -532,8 +606,21 @@ function openLog(id) {
   if (!c) return;
   const dayNum = nextCallDay(c);
   const nd = nextCallDate(c) || today();
+  const scriptText = getScript(dayNum, c.problem);
+
   document.getElementById('modal-title').textContent = `Log Day ${dayNum} call — ${c.name}`;
   document.getElementById('modal-body').innerHTML = `
+    <div class="script-box">
+      <div class="script-toggle" onclick="toggleScript()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Open call script</div>
+      <div class="script-content" id="script-content">
+        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Gatekeeper (if needed):</div>
+        <div style="margin-bottom:12px;color:var(--text2);font-style:italic;">${SCRIPTS.gatekeeper}</div>
+        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Direct to Owner:</div>
+        <div style="margin-bottom:12px;color:var(--text2);font-style:italic;">${scriptText.replace(/\[Owner\]/g, c.owner || 'Owner')}</div>
+        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Voicemail (if no answer):</div>
+        <div style="color:var(--text2);font-style:italic;">${SCRIPTS.voicemail.replace(/\[Owner\]/g, c.owner || 'Owner')}</div>
+      </div>
+    </div>
     <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${nd}"></div>
     <div style="margin-bottom:10px"><label>Outcome</label><select id="log-outcome">
       <option>No answer — left voicemail</option>
@@ -592,8 +679,7 @@ function openDetail(id) {
       <div><span style="color:var(--text3)">Offer: </span>${c.offer||'—'}</div>
       <div><span style="color:var(--text3)">Status: </span>${getStatus(c)}</div>
       <div><span style="color:var(--text3)">Next call: </span>${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</div>
-      ${c.city ? `<div><span style="color:var(--text3)">City: </span>${c.city}</div>` : ''}
-      ${c.website ? `<div><span style="color:var(--text3)">Website: </span><a href="https://${c.website}" target="_blank" style="color:var(--blue-text)">${c.website}</a></div>` : ''}
+      ${c.website ? `<div><span style="color:var(--text3)">Website: </span><a href="${c.website.startsWith('http') ? c.website : 'https://'+c.website}" target="_blank" style="color:var(--gold)">${c.website}</a></div>` : ''}
     </div>
     ${c.notes ? `<div style="font-size:12px;color:var(--text2);margin-bottom:1rem;padding:8px 12px;background:var(--bg2);border-radius:var(--radius)">${c.notes}</div>` : ''}
     <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text3)">Call history</div>
@@ -638,12 +724,19 @@ function closeModal(e) {
 
 // ── Boot ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('f-date') && (document.getElementById('f-date').value = today());
+  const fDate = document.getElementById('f-date');
+  if (fDate) fDate.value = today();
+  
   const cfg = loadConfig();
   if (cfg && cfg.apiKey && cfg.databaseURL) {
     initFirebase(cfg);
   } else {
     document.getElementById('setup-screen').style.display = '';
+  }
+  
+  if(document.getElementById('main-app').style.display !== 'none') {
+    renderToday(); // default view
+    showTab('today');
   }
 });
 </script>
