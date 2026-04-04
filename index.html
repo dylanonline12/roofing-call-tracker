@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Call Tracker — Dylan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg2: #f6f6f4;
+      --bg3: #ededeb;
+      --text: #1a1a1a;
+      --text2: #555550;
+      --text3: #999990;
+      --border: rgba(0,0,0,0.1);
+      --border2: rgba(0,0,0,0.18);
+      --blue-bg: #e6f1fb;
+      --blue-text: #185fa5;
+      --amber-bg: #faeeda;
+      --amber-text: #854f0b;
+      --red-bg: #fcebeb;
+      --red-text: #a32d2d;
+      --green-bg: #eaf3de;
+      --green-text: #3b6d11;
+      --purple-bg: #eeedfe;
+      --purple-text: #534ab7;
+      --gray-bg: #f1efe8;
+      --gray-text: #5f5e5a;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg2: #252523;
+        --bg3: #2e2e2b;
+        --text: #f0f0ec;
+        --text2: #aaaaA4;
+        --text3: #666660;
+        --border: rgba(255,255,255,0.1);
+        --border2: rgba(255,255,255,0.18);
+        --blue-bg: #042c53;
+        --blue-text: #85b7eb;
+        --amber-bg: #412402;
+        --amber-text: #fac775;
+        --red-bg: #501313;
+        --red-text: #f09595;
+        --green-bg: #173404;
+        --green-text: #c0dd97;
+        --purple-bg: #26215c;
+        --purple-text: #afa9ec;
+        --gray-bg: #2c2c2a;
+        --gray-text: #b4b2a9;
+      }
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg2); color: var(--text); min-height: 100vh; }
+
+    .app { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    header h1 { font-size: 18px; font-weight: 500; color: var(--text); }
+    header span { font-size: 13px; color: var(--text3); }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .tab { padding: 6px 16px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; font-size: 13px; cursor: pointer; color: var(--text2); }
+    .tab.active { background: var(--bg); color: var(--text); font-weight: 500; border-color: var(--border2); }
+    .tab:hover:not(.active) { background: var(--bg3); }
+
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .stat { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; border: 0.5px solid var(--border); }
+    .stat-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+    .stat-val { font-size: 24px; font-weight: 500; color: var(--text); }
+
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+    .card-title { font-size: 14px; font-weight: 500; margin-bottom: 1rem; color: var(--text); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%; font-size: 13px; padding: 7px 10px;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--bg2); color: var(--text); outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue-text); }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .btn { padding: 8px 18px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; font-size: 13px; cursor: pointer; color: var(--text); }
+    .btn:hover { background: var(--bg3); }
+    .btn-primary { background: var(--blue-bg); border-color: var(--blue-text); color: var(--blue-text); font-weight: 500; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-danger { border-color: var(--red-text); color: var(--red-text); }
+    .btn-danger:hover { background: var(--red-bg); }
+
+    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .search-row input { flex: 1; }
+    .search-row select { width: 180px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { font-size: 11px; font-weight: 500; color: var(--text3); text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--border); }
+    td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); vertical-align: middle; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg2); }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 11px; font-weight: 500; }
+    .badge-due { background: var(--red-bg); color: var(--red-text); }
+    .badge-today { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-done { background: var(--green-bg); color: var(--green-text); }
+    .badge-pending { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-closed { background: var(--gray-bg); color: var(--gray-text); }
+    .badge-demo { background: var(--purple-bg); color: var(--purple-text); }
+
+    .due-section { margin-bottom: 1.25rem; }
+    .due-header { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text); }
+    .due-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; background: var(--bg); }
+    .due-info { flex: 1; }
+    .due-name { font-size: 13px; font-weight: 500; }
+    .due-sub { font-size: 12px; color: var(--text2); margin-top: 3px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .due-actions { display: flex; gap: 6px; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 1.25rem; width: min(500px, 95vw); max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 1rem; color: var(--text); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+
+    .history-item { font-size: 12px; color: var(--text2); padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .history-day { font-weight: 500; color: var(--text); }
+
+    .empty { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 13px; }
+
+    .loading { text-align: center; padding: 3rem; color: var(--text3); font-size: 13px; }
+
+    .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity 0.2s; z-index: 200; }
+    .toast.show { opacity: 1; }
+
+    .setup-screen { max-width: 540px; margin: 4rem auto; }
+    .setup-screen h2 { font-size: 18px; font-weight: 500; margin-bottom: 0.5rem; }
+    .setup-screen p { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.6; }
+    .setup-screen label { margin-bottom: 6px; }
+    .setup-screen input { margin-bottom: 10px; }
+    .code { font-family: monospace; font-size: 12px; background: var(--bg3); padding: 10px 14px; border-radius: var(--radius); color: var(--text); margin-bottom: 1rem; white-space: pre-wrap; word-break: break-all; }
+
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .due-card { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="setup-screen" class="app setup-screen" style="display:none">
+  <div class="card">
+    <div class="card-title">Firebase setup</div>
+    <p>To use this tracker across devices, you need a free Firebase project. Follow the steps in the README, then paste your config values below.</p>
+
+    <div style="margin-bottom:10px"><label>API Key</label><input id="cfg-apiKey" type="text" placeholder="AIzaSy..."></div>
+    <div style="margin-bottom:10px"><label>Auth Domain</label><input id="cfg-authDomain" type="text" placeholder="your-app.firebaseapp.com"></div>
+    <div style="margin-bottom:10px"><label>Project ID</label><input id="cfg-projectId" type="text" placeholder="your-app-id"></div>
+    <div style="margin-bottom:10px"><label>Database URL <span style="color:var(--text3)">(Realtime Database)</span></label><input id="cfg-dbUrl" type="text" placeholder="https://your-app-default-rtdb.firebaseio.com"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-primary" onclick="saveConfig()">Save and connect</button>
+    </div>
+  </div>
+</div>
+
+<div id="main-app" class="app" style="display:none">
+  <header>
+    <h1>Call Tracker</h1>
+    <span id="header-date"></span>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showTab('add')">Add company</button>
+    <button class="tab" onclick="showTab('all')">All companies</button>
+    <button class="tab" onclick="showTab('scripts')">Scripts</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total companies</div><div class="stat-val" id="s-total">—</div></div>
+      <div class="stat"><div class="stat-label">Due today</div><div class="stat-val" id="s-today">—</div></div>
+      <div class="stat"><div class="stat-label">Overdue</div><div class="stat-val" id="s-overdue">—</div></div>
+      <div class="stat"><div class="stat-label">Demos booked</div><div class="stat-val" id="s-demos">—</div></div>
+    </div>
+    <div id="due-overdue-section" class="due-section"></div>
+    <div id="due-today-section" class="due-section"></div>
+    <div id="due-upcoming-section" class="due-section"></div>
+  </div>
+
+  <!-- ADD -->
+  <div id="tab-add" style="display:none">
+    <div class="card">
+      <div class="card-title">Add new roofing company</div>
+      <div class="form-row">
+        <div><label>Company name *</label><input id="f-name" type="text" placeholder="ABC Roofing"></div>
+        <div><label>Owner name</label><input id="f-owner" type="text" placeholder="Ben"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Phone</label><input id="f-phone" type="text" placeholder="(555) 000-0000"></div>
+        <div><label>City / Area</label><input id="f-city" type="text" placeholder="Providence, RI"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Problem identified</label><select id="f-problem">
+          <option value="">— select —</option>
+          <option>Missed calls</option>
+          <option>Low reviews</option>
+          <option>Website glitch</option>
+          <option>Multiple problems</option>
+        </select></div>
+        <div><label>Next step offer</label><select id="f-offer">
+          <option value="">— select —</option>
+          <option>Receptionist demo</option>
+          <option>Website demo</option>
+          <option>Review capture chat</option>
+        </select></div>
+      </div>
+      <div class="form-row">
+        <div><label>First call date *</label><input id="f-date" type="date"></div>
+        <div><label>Website URL</label><input id="f-website" type="text" placeholder="abcroofing.com"></div>
+      </div>
+      <div style="margin-bottom:10px"><label>Notes</label><textarea id="f-notes" placeholder="What did you notice? Any context before the first call..."></textarea></div>
+      <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" onclick="addCompany()">Add company</button></div>
+    </div>
+  </div>
+
+  <!-- ALL -->
+  <div id="tab-all" style="display:none">
+    <div class="search-row">
+      <input type="text" id="search" placeholder="Search by company or owner..." oninput="renderAll()">
+      <select id="filter-status" onchange="renderAll()">
+        <option value="">All statuses</option>
+        <option>Active</option>
+        <option>Demo booked</option>
+        <option>Closed — won</option>
+        <option>Closed — lost</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr>
+          <th>Company</th><th>Owner</th><th>Problem</th><th>Call day</th><th>Next follow-up</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="all-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <div id="tab-scripts" style="display:none">
+    <div class="card">
+      <div class="card-title">Quick reference — call scripts</div>
+      <div style="display:grid;gap:1rem">
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text)">Gatekeeper — routing attempt</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"Hi, I'm calling for [Owner]. Could you route me to his office?"</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;padding:0 4px">If asked what it's regarding: <span style="font-style:italic">"It's regarding the lead flow on the website."</span> — then stop talking.</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Missed calls</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I'll be quick — I noticed your office line doesn't have a backup for when you're on another call or after hours. For a roofing company, that's usually costing you contracts you don't even know you lost. That's why I'm calling — would a quick demo make sense, even just 10 minutes?"</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Low reviews</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I pulled up your reviews and your count is lower than a few competitors in the area. Homeowners check that before they call — if you're not showing up strong, they're skipping you before you ever get a shot. Would it be totally crazy to do a 10-minute chat to see if this is a fit?"</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 1 — Website glitch</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I was on your site and ran into some issues that would make it hard for a customer to actually contact you. You're burning your marketing budget when that happens — that's why I'm calling. Would you be open to a quick demo of a cleaner setup?"</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 3 — Force clarity</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan — I called earlier this week about your lead flow. Just following up to see if it's worth a quick two-minute conversation, or if I should close the loop here."</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 5 — Decision point</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I've reached out a couple times about your lead flow. Before I move on, I want to give you the opportunity for a clear yes or no. No hard feelings either way."</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">Day 7 — Close the loop</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"[Owner], I'm Dylan. I've reached out a few times about protecting your lead flow. I'm going to close the loop on my end — no hard feelings. If the timing ever changes, you know where to find me. Take care."</div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:6px">No answer voicemail — Day 1</div>
+          <div style="font-size:13px;color:var(--text2);font-style:italic;padding:10px 14px;background:var(--bg2);border-radius:var(--radius)">"Hey [Owner], this is Dylan — I'll keep it short. I was looking at your setup and noticed something around your lead flow that's worth a two-minute conversation. I'll try you again in a couple days. Talk soon."</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const DAYS = [1, 3, 5, 7];
+const DAY_GAPS = { 1: 0, 3: 2, 5: 2, 7: 2 };
+
+let companies = [];
+let db = null;
+
+// ── Firebase config ──────────────────────────────────────────
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem('fb_config') || 'null'); } catch { return null; }
+}
+function saveConfig() {
+  const cfg = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    databaseURL: document.getElementById('cfg-dbUrl').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.databaseURL) { alert('API Key and Database URL are required.'); return; }
+  localStorage.setItem('fb_config', JSON.stringify(cfg));
+  initFirebase(cfg);
+}
+function initFirebase(cfg) {
+  try {
+    const app = firebase.initializeApp(cfg);
+    db = firebase.database(app);
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = '';
+    listenToData();
+  } catch (e) {
+    alert('Firebase connection failed. Check your config values and try again.\n\n' + e.message);
+  }
+}
+
+// ── Realtime sync ─────────────────────────────────────────────
+function listenToData() {
+  db.ref('companies').on('value', snap => {
+    const val = snap.val() || {};
+    companies = Object.values(val);
+    renderDashboard();
+    renderAll();
+  });
+}
+async function pushCompany(c) {
+  await db.ref('companies/' + c.id).set(c);
+}
+async function updateCompany(c) {
+  await db.ref('companies/' + c.id).set(c);
+}
+async function removeCompany(id) {
+  await db.ref('companies/' + id).remove();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function today() { return new Date().toISOString().split('T')[0]; }
+function addDays(dateStr, n) {
+  const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().split('T')[0];
+}
+function daysDiff(a, b) { return Math.round((new Date(a) - new Date(b)) / 86400000); }
+function nextCallDay(c) {
+  const done = (c.calls || []).map(x => x.day);
+  return DAYS.find(d => !done.includes(d)) || null;
+}
+function nextCallDate(c) {
+  const calls = c.calls || [];
+  if (!calls.length) return c.startDate;
+  const last = calls[calls.length - 1];
+  const nd = nextCallDay(c);
+  if (!nd) return null;
+  return addDays(last.date, DAY_GAPS[nd] || 2);
+}
+function getStatus(c) {
+  if (c.status) return c.status;
+  if (!nextCallDay(c)) return 'Loop closed';
+  return 'Active';
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${parseInt(m)}/${parseInt(day)}/${y.slice(2)}`;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function showTab(t) {
+  ['dashboard','add','all','scripts'].forEach(x => {
+    document.getElementById('tab-' + x).style.display = x === t ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['dashboard','add','all','scripts'][i] === t);
+  });
+  if (t === 'all') renderAll();
+  if (t === 'dashboard') renderDashboard();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+function renderDashboard() {
+  const tod = today();
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+  document.getElementById('s-total').textContent = companies.length;
+  const active = companies.filter(c => getStatus(c) === 'Active');
+  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod; });
+  const todayDue = active.filter(c => nextCallDate(c) === tod);
+  const upcoming = active.filter(c => { const nd = nextCallDate(c); return nd && nd > tod; })
+    .sort((a,b) => nextCallDate(a) > nextCallDate(b) ? 1 : -1).slice(0, 8);
+  const demos = companies.filter(c => c.status === 'Demo booked').length;
+
+  document.getElementById('s-today').textContent = todayDue.length;
+  document.getElementById('s-overdue').textContent = overdue.length;
+  document.getElementById('s-demos').textContent = demos;
+
+  function dueCard(c, urgency) {
+    const nd = nextCallDate(c);
+    const dayNum = nextCallDay(c);
+    const diff = daysDiff(nd, tod);
+    const badge = urgency === 'overdue'
+      ? `<span class="badge badge-due">Overdue ${Math.abs(diff)}d</span>`
+      : urgency === 'today'
+      ? `<span class="badge badge-today">Today</span>`
+      : `<span class="badge badge-pending">In ${diff}d — ${fmtDate(nd)}</span>`;
+    return `<div class="due-card">
+      <div class="due-info">
+        <div class="due-name">${c.name}${c.owner ? ' — ' + c.owner : ''}</div>
+        <div class="due-sub">
+          <span>${c.problem || 'No problem noted'}</span>
+          <span>Day ${dayNum} call</span>
+          ${badge}
+          ${c.phone ? `<span>${c.phone}</span>` : ''}
+        </div>
+      </div>
+      <div class="due-actions">
+        <button class="btn btn-sm btn-primary" onclick="openLog('${c.id}')">Log call</button>
+        <button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button>
+      </div>
+    </div>`;
+  }
+
+  const ovSec = document.getElementById('due-overdue-section');
+  ovSec.innerHTML = overdue.length
+    ? `<div class="due-header">Overdue (${overdue.length})</div>` + overdue.map(c => dueCard(c,'overdue')).join('')
+    : '';
+
+  const todSec = document.getElementById('due-today-section');
+  todSec.innerHTML = todayDue.length
+    ? `<div class="due-header">Due today (${todayDue.length})</div>` + todayDue.map(c => dueCard(c,'today')).join('')
+    : '';
+
+  const upSec = document.getElementById('due-upcoming-section');
+  upSec.innerHTML = upcoming.length
+    ? `<div class="due-header">Coming up</div>` + upcoming.map(c => dueCard(c,'upcoming')).join('')
+    : '';
+
+  if (!overdue.length && !todayDue.length && !upcoming.length && !companies.length) {
+    ovSec.innerHTML = `<div class="empty">No companies tracked yet — add your first one above.</div>`;
+  }
+}
+
+// ── All companies ─────────────────────────────────────────────
+function renderAll() {
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  const fs = document.getElementById('filter-status')?.value || '';
+  const filtered = companies.filter(c => {
+    const mq = !q || c.name.toLowerCase().includes(q) || (c.owner||'').toLowerCase().includes(q);
+    const ms = !fs || getStatus(c) === fs;
+    return mq && ms;
+  });
+  const tbody = document.getElementById('all-table');
+  if (!tbody) return;
+  if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">No results.</div></td></tr>`; return; }
+  const tod = today();
+  tbody.innerHTML = filtered.map(c => {
+    const nd = nextCallDate(c);
+    const dayNum = nextCallDay(c);
+    const st = getStatus(c);
+    let ndBadge = nd ? fmtDate(nd) : '—';
+    if (nd && nd < tod && st === 'Active') ndBadge = `<span class="badge badge-due">${fmtDate(nd)}</span>`;
+    else if (nd === tod && st === 'Active') ndBadge = `<span class="badge badge-today">Today</span>`;
+    const stBadge =
+      st === 'Active' ? `<span class="badge badge-pending">Active</span>` :
+      st === 'Demo booked' ? `<span class="badge badge-demo">Demo booked</span>` :
+      st === 'Closed — won' ? `<span class="badge badge-done">Won</span>` :
+      st === 'Loop closed' ? `<span class="badge badge-closed">Loop closed</span>` :
+      `<span class="badge badge-closed">Lost</span>`;
+    return `<tr>
+      <td style="font-weight:500">${c.name}</td>
+      <td>${c.owner||'—'}</td>
+      <td>${c.problem||'—'}</td>
+      <td>${dayNum ? 'Day ' + dayNum : 'Complete'}</td>
+      <td>${ndBadge}</td>
+      <td>${stBadge}</td>
+      <td><button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Add company ───────────────────────────────────────────────
+async function addCompany() {
+  const name = document.getElementById('f-name').value.trim();
+  const date = document.getElementById('f-date').value;
+  if (!name || !date) { alert('Company name and first call date are required.'); return; }
+  const c = {
+    id: Date.now().toString(),
+    name,
+    owner: document.getElementById('f-owner').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    city: document.getElementById('f-city').value.trim(),
+    website: document.getElementById('f-website').value.trim(),
+    problem: document.getElementById('f-problem').value,
+    offer: document.getElementById('f-offer').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    startDate: date,
+    calls: [],
+    status: null,
+    createdAt: new Date().toISOString()
+  };
+  await pushCompany(c);
+  ['f-name','f-owner','f-phone','f-city','f-website','f-notes'].forEach(id => document.getElementById(id).value = '');
+  ['f-problem','f-offer'].forEach(id => document.getElementById(id).selectedIndex = 0);
+  document.getElementById('f-date').value = today();
+  showToast('Company added');
+  showTab('dashboard');
+}
+
+// ── Log call ──────────────────────────────────────────────────
+function openLog(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  const dayNum = nextCallDay(c);
+  const nd = nextCallDate(c) || today();
+  document.getElementById('modal-title').textContent = `Log Day ${dayNum} call — ${c.name}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${nd}"></div>
+    <div style="margin-bottom:10px"><label>Outcome</label><select id="log-outcome">
+      <option>No answer — left voicemail</option>
+      <option>No answer — no voicemail</option>
+      <option>Gatekeeper — not transferred</option>
+      <option>Reached owner — advancing</option>
+      <option>Reached owner — demo booked</option>
+      <option>Reached owner — not interested</option>
+      <option>Reached owner — closed loop</option>
+    </select></div>
+    <div><label>Notes</label><textarea id="log-notes" placeholder="Objections, what they said, anything relevant..."></textarea></div>
+  `;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitLog('${id}', ${dayNum})">Save call</button>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+async function submitLog(id, dayNum) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  const outcome = document.getElementById('log-outcome').value;
+  const logDate = document.getElementById('log-date').value;
+  const notes = document.getElementById('log-notes').value.trim();
+  if (!c.calls) c.calls = [];
+  c.calls.push({ day: parseInt(dayNum), date: logDate, outcome, notes });
+  if (outcome === 'Reached owner — demo booked') c.status = 'Demo booked';
+  else if (outcome === 'Reached owner — not interested') c.status = 'Closed — lost';
+  else if (outcome === 'Reached owner — closed loop') c.status = 'Closed — lost';
+  await updateCompany(c);
+  closeModal();
+  showToast('Call logged');
+}
+
+// ── Detail modal ──────────────────────────────────────────────
+function openDetail(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  const nd = nextCallDate(c);
+  const dayNum = nextCallDay(c);
+  const calls = c.calls || [];
+  const histHTML = calls.length
+    ? calls.map(cl => `<div class="history-item">
+        <span class="history-day">Day ${cl.day}</span> &middot; ${fmtDate(cl.date)} &middot; ${cl.outcome}
+        ${cl.notes ? `<div style="color:var(--text3);margin-top:2px">${cl.notes}</div>` : ''}
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3)">No calls logged yet.</div>';
+
+  document.getElementById('modal-title').textContent = c.name;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:13px">
+      <div><span style="color:var(--text3)">Owner: </span>${c.owner||'—'}</div>
+      <div><span style="color:var(--text3)">Phone: </span>${c.phone||'—'}</div>
+      <div><span style="color:var(--text3)">Problem: </span>${c.problem||'—'}</div>
+      <div><span style="color:var(--text3)">Offer: </span>${c.offer||'—'}</div>
+      <div><span style="color:var(--text3)">Status: </span>${getStatus(c)}</div>
+      <div><span style="color:var(--text3)">Next call: </span>${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</div>
+      ${c.city ? `<div><span style="color:var(--text3)">City: </span>${c.city}</div>` : ''}
+      ${c.website ? `<div><span style="color:var(--text3)">Website: </span><a href="https://${c.website}" target="_blank" style="color:var(--blue-text)">${c.website}</a></div>` : ''}
+    </div>
+    ${c.notes ? `<div style="font-size:12px;color:var(--text2);margin-bottom:1rem;padding:8px 12px;background:var(--bg2);border-radius:var(--radius)">${c.notes}</div>` : ''}
+    <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text3)">Call history</div>
+    ${histHTML}
+    <div style="margin-top:1rem"><label>Update status</label><select id="detail-status">
+      <option value="">— no change —</option>
+      <option>Active</option>
+      <option>Demo booked</option>
+      <option>Closed — won</option>
+      <option>Closed — lost</option>
+    </select></div>
+  `;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-danger btn-sm" onclick="deleteCompany('${id}')">Delete</button>
+    <button class="btn" onclick="closeModal()">Close</button>
+    <button class="btn btn-primary" onclick="saveStatus('${id}')">Save status</button>
+    ${dayNum ? `<button class="btn btn-primary" onclick="closeModal();openLog('${id}')">Log next call</button>` : ''}
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+async function saveStatus(id) {
+  const c = companies.find(x => x.id === id);
+  const ns = document.getElementById('detail-status').value;
+  if (ns) c.status = ns;
+  await updateCompany(c);
+  closeModal();
+  showToast('Status updated');
+}
+
+async function deleteCompany(id) {
+  if (!confirm('Delete this company from tracking?')) return;
+  await removeCompany(id);
+  closeModal();
+  showToast('Company removed');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-bg')) return;
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date') && (document.getElementById('f-date').value = today());
+  const cfg = loadConfig();
+  if (cfg && cfg.apiKey && cfg.databaseURL) {
+    initFirebase(cfg);
+  } else {
+    document.getElementById('setup-screen').style.display = '';
+  }
+});
+</script>
+</body>
+</html>
