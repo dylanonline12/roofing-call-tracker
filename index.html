@@ -443,6 +443,7 @@ tr:hover td { background: var(--row-hover); }
         <div class="stat"><div class="stat-label">Due today</div><div class="stat-val" id="s-pipe-today">—</div></div>
         <div class="stat"><div class="stat-label">Overdue</div><div class="stat-val" id="s-pipe-overdue">—</div></div>
         <div class="stat"><div class="stat-label">Demos booked</div><div class="stat-val" id="s-pipe-demos">—</div></div>
+        <div class="stat"><div class="stat-label">Called today</div><div class="stat-val" id="s-pipe-called-today">—</div></div>
       </div>
       
       <div class="card-title" style="margin-bottom:1rem;">Pipeline Breakdown</div>
@@ -693,8 +694,8 @@ function renderToday() {
   if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
   
   const active = companies.filter(c => getStatus(c) === 'Active');
-  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod; });
-  const todayDue = active.filter(c => nextCallDate(c) === tod);
+  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod && (c.calls || []).length > 0; });
+  const todayDue = active.filter(c => nextCallDate(c) === tod || (nextCallDate(c) < tod && (c.calls || []).length === 0));
   const demos = companies.filter(c => c.status === 'Demo booked').length;
 
   const sToday = document.getElementById('s-today');
@@ -718,9 +719,10 @@ function renderToday() {
 function renderPipeline() {
   const tod = today();
   const active = companies.filter(c => getStatus(c) === 'Active');
-  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod; });
-  const todayDue = active.filter(c => nextCallDate(c) === tod);
+  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod && (c.calls || []).length > 0; });
+  const todayDue = active.filter(c => nextCallDate(c) === tod || (nextCallDate(c) < tod && (c.calls || []).length === 0));
   const demos = companies.filter(c => c.status === 'Demo booked').length;
+  const calledToday = companies.filter(c => (c.calls || []).some(cl => cl.date === tod)).length;
 
   const sTotal = document.getElementById('s-total');
   if (sTotal) sTotal.textContent = companies.length;
@@ -730,6 +732,8 @@ function renderPipeline() {
   if (sPipeOverdue) sPipeOverdue.textContent = overdue.length;
   const sPipeDemos = document.getElementById('s-pipe-demos');
   if (sPipeDemos) sPipeDemos.textContent = demos;
+  const sPipeCalledToday = document.getElementById('s-pipe-called-today');
+  if (sPipeCalledToday) sPipeCalledToday.textContent = calledToday;
 
   const f1 = active.filter(c => nextCallDay(c) === 1).length;
   const f3 = active.filter(c => nextCallDay(c) === 3).length;
@@ -831,23 +835,15 @@ function openLog(id) {
   const c = companies.find(x => x.id === id);
   if (!c) return;
   const dayNum = nextCallDay(c);
-  const nd = nextCallDate(c) || today();
-  const scriptText = getScript(dayNum, c.problem);
 
   document.getElementById('modal-title').textContent = `Log Day ${dayNum} call — ${c.name}`;
   document.getElementById('modal-body').innerHTML = `
-    <div class="script-box">
-      <div class="script-toggle" onclick="toggleScript()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Open call script</div>
-      <div class="script-content" id="script-content">
-        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Gatekeeper (if needed):</div>
-        <div style="margin-bottom:12px;color:var(--text2);font-style:italic;">${SCRIPTS.gatekeeper}</div>
-        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Direct to Owner:</div>
-        <div style="margin-bottom:12px;color:var(--text2);font-style:italic;">${scriptText.replace(/\[Owner\]/g, c.owner || 'Owner')}</div>
-        <div style="font-weight:600;margin-bottom:6px;color:var(--text)">Voicemail (if no answer):</div>
-        <div style="color:var(--text2);font-style:italic;">${SCRIPTS.voicemail.replace(/\[Owner\]/g, c.owner || 'Owner')}</div>
-      </div>
+    <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;">
+      ${c.owner ? `<div style="margin-bottom:6px;"><span style="color:var(--text-secondary)">Owner: </span><strong>${c.owner}</strong></div>` : ''}
+      ${c.phone ? `<div style="margin-bottom:6px;"><span style="color:var(--text-secondary)">Phone: </span><strong>${c.phone}</strong></div>` : ''}
+      ${c.notes ? `<div style="color:var(--text-secondary);font-size:12px;border-top:0.5px solid var(--divider);padding-top:8px;margin-top:6px;">${c.notes}</div>` : ''}
     </div>
-    <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${nd}"></div>
+    <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${today()}"></div>
     <div style="margin-bottom:10px"><label>Outcome</label><select id="log-outcome">
       <option>No answer — left voicemail</option>
       <option>No answer — no voicemail</option>
@@ -856,6 +852,7 @@ function openLog(id) {
       <option>Reached owner — demo booked</option>
       <option>Reached owner — not interested</option>
       <option>Reached owner — closed loop</option>
+      <option>Remove from list</option>
     </select></div>
     <div><label>Notes</label><textarea id="log-notes" placeholder="Objections, what they said, anything relevant..."></textarea></div>
   `;
@@ -877,6 +874,7 @@ async function submitLog(id, dayNum) {
   if (outcome === 'Reached owner — demo booked') c.status = 'Demo booked';
   else if (outcome === 'Reached owner — not interested') c.status = 'Closed — lost';
   else if (outcome === 'Reached owner — closed loop') c.status = 'Closed — lost';
+  else if (outcome === 'Remove from list') c.status = 'Closed — lost';
   await updateCompany(c);
   closeModal();
   showToast('Call logged');
@@ -890,25 +888,28 @@ function openDetail(id) {
   const dayNum = nextCallDay(c);
   const calls = c.calls || [];
   const histHTML = calls.length
-    ? calls.map(cl => `<div class="history-item">
-        <span class="history-day">Day ${cl.day}</span> &middot; ${fmtDate(cl.date)} &middot; ${cl.outcome}
-        ${cl.notes ? `<div style="color:var(--text3);margin-top:2px">${cl.notes}</div>` : ''}
+    ? calls.map((cl, idx) => `<div class="history-item" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1">
+          <span class="history-day">Day ${cl.day}</span> &middot; ${fmtDate(cl.date)} &middot; ${cl.outcome}
+          ${cl.notes ? `<div style="color:var(--text-tertiary);margin-top:2px">${cl.notes}</div>` : ''}
+        </div>
+        <button class="btn btn-sm" style="margin-left:8px;flex-shrink:0;" onclick="openEditCall('${id}', ${idx})">Edit</button>
       </div>`).join('')
-    : '<div style="font-size:12px;color:var(--text3)">No calls logged yet.</div>';
+    : '<div style="font-size:12px;color:var(--text-tertiary)">No calls logged yet.</div>';
 
   document.getElementById('modal-title').textContent = c.name;
   document.getElementById('modal-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:13px">
-      <div><span style="color:var(--text3)">Owner: </span>${c.owner||'—'}</div>
-      <div><span style="color:var(--text3)">Phone: </span>${c.phone||'—'}</div>
-      <div><span style="color:var(--text3)">Problem: </span>${c.problem||'—'}</div>
-      <div><span style="color:var(--text3)">Offer: </span>${c.offer||'—'}</div>
-      <div><span style="color:var(--text3)">Status: </span>${getStatus(c)}</div>
-      <div><span style="color:var(--text3)">Next call: </span>${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</div>
-      ${c.website ? `<div><span style="color:var(--text3)">Website: </span><a href="${c.website.startsWith('http') ? c.website : 'https://'+c.website}" target="_blank" style="color:var(--gold)">${c.website}</a></div>` : ''}
+      <div><span style="color:var(--text-tertiary)">Owner: </span>${c.owner||'—'}</div>
+      <div><span style="color:var(--text-tertiary)">Phone: </span>${c.phone||'—'}</div>
+      <div><span style="color:var(--text-tertiary)">Problem: </span>${c.problem||'—'}</div>
+      <div><span style="color:var(--text-tertiary)">Offer: </span>${c.offer||'—'}</div>
+      <div><span style="color:var(--text-tertiary)">Status: </span>${getStatus(c)}</div>
+      <div><span style="color:var(--text-tertiary)">Next call: </span>${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</div>
+      ${c.website ? `<div><span style="color:var(--text-tertiary)">Website: </span><a href="${c.website.startsWith('http') ? c.website : 'https://'+c.website}" target="_blank" style="color:var(--accent)">${c.website}</a></div>` : ''}
     </div>
-    ${c.notes ? `<div style="font-size:12px;color:var(--text2);margin-bottom:1rem;padding:8px 12px;background:var(--bg2);border-radius:var(--radius)">${c.notes}</div>` : ''}
-    <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text3)">Call history</div>
+    ${c.notes ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:1rem;padding:8px 12px;background:var(--bg-secondary);border-radius:8px">${c.notes}</div>` : ''}
+    <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text-tertiary)">Call history</div>
     ${histHTML}
     <div style="margin-top:1rem"><label>Update status</label><select id="detail-status">
       <option value="">— no change —</option>
@@ -925,6 +926,52 @@ function openDetail(id) {
     ${dayNum ? `<button class="btn btn-primary" onclick="closeModal();openLog('${id}')">Log next call</button>` : ''}
   `;
   document.getElementById('modal-bg').classList.add('open');
+}
+
+// ── Edit existing call ─────────────────────────────────────────
+function openEditCall(companyId, callIdx) {
+  const c = companies.find(x => x.id === companyId);
+  if (!c || !c.calls || !c.calls[callIdx]) return;
+  const cl = c.calls[callIdx];
+
+  document.getElementById('modal-title').textContent = `Edit Day ${cl.day} call — ${c.name}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="edit-log-date" value="${cl.date}"></div>
+    <div style="margin-bottom:10px"><label>Outcome</label><select id="edit-log-outcome">
+      <option ${cl.outcome==='No answer — left voicemail'?'selected':''}>No answer — left voicemail</option>
+      <option ${cl.outcome==='No answer — no voicemail'?'selected':''}>No answer — no voicemail</option>
+      <option ${cl.outcome==='Gatekeeper — not transferred'?'selected':''}>Gatekeeper — not transferred</option>
+      <option ${cl.outcome==='Reached owner — advancing'?'selected':''}>Reached owner — advancing</option>
+      <option ${cl.outcome==='Reached owner — demo booked'?'selected':''}>Reached owner — demo booked</option>
+      <option ${cl.outcome==='Reached owner — not interested'?'selected':''}>Reached owner — not interested</option>
+      <option ${cl.outcome==='Reached owner — closed loop'?'selected':''}>Reached owner — closed loop</option>
+      <option ${cl.outcome==='Remove from list'?'selected':''}>Remove from list</option>
+    </select></div>
+    <div><label>Notes</label><textarea id="edit-log-notes" placeholder="Objections, what they said, anything relevant...">${cl.notes||''}</textarea></div>
+  `;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn" onclick="openDetail('${companyId}')">Back</button>
+    <button class="btn btn-primary" onclick="saveEditCall('${companyId}', ${callIdx})">Save changes</button>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+async function saveEditCall(companyId, callIdx) {
+  const c = companies.find(x => x.id === companyId);
+  if (!c || !c.calls || !c.calls[callIdx]) return;
+  const outcome = document.getElementById('edit-log-outcome').value;
+  const logDate = document.getElementById('edit-log-date').value;
+  const notes = document.getElementById('edit-log-notes').value.trim();
+  c.calls[callIdx] = { ...c.calls[callIdx], date: logDate, outcome, notes };
+  // Recompute status from all calls
+  const hasDemo = c.calls.some(cl => cl.outcome === 'Reached owner — demo booked');
+  const hasLost = c.calls.some(cl => cl.outcome === 'Reached owner — not interested' || cl.outcome === 'Reached owner — closed loop' || cl.outcome === 'Remove from list');
+  if (hasDemo) c.status = 'Demo booked';
+  else if (hasLost && !hasDemo) c.status = 'Closed — lost';
+  else c.status = null; // reset to active if no terminal outcome
+  await updateCompany(c);
+  showToast('Call updated');
+  openDetail(companyId);
 }
 
 async function saveStatus(id) {
