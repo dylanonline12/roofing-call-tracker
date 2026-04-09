@@ -320,6 +320,82 @@ tr:hover td { background: var(--row-hover); }
 .script-content.open { display: block; }
 .script-toggle { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 500; text-transform: none; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 
+/* Ghost editable fields — invisible until hovered */
+.ghost-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  border-radius: 0;
+  padding: 1px 2px;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  color: inherit;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: text;
+  box-shadow: none;
+}
+.ghost-input:hover {
+  border-bottom-color: var(--text-tertiary);
+  box-shadow: none;
+}
+.ghost-input:focus {
+  border-bottom-color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+}
+.ghost-select {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  border-radius: 0;
+  padding: 1px 2px;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none;
+}
+.ghost-select:hover {
+  border-bottom-color: var(--text-tertiary);
+  box-shadow: none;
+}
+.ghost-select:focus {
+  border-bottom-color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+}
+.ghost-textarea {
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  width: 100%;
+  outline: none;
+  resize: vertical;
+  min-height: 40px;
+  transition: border-color 0.2s;
+  box-shadow: none;
+}
+.ghost-textarea:hover {
+  border-color: var(--text-tertiary);
+  box-shadow: none;
+}
+.ghost-textarea:focus {
+  border-color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+}
+
 .history-item { font-size: 14px; color: var(--text-primary); padding: 10px 0; border-bottom: 0.5px solid var(--divider); }
 .history-item:last-child { border-bottom: none; }
 .history-day { font-weight: 500; color: var(--text-primary); }
@@ -839,9 +915,9 @@ function openLog(id) {
   document.getElementById('modal-title').textContent = `Log Day ${dayNum} call — ${c.name}`;
   document.getElementById('modal-body').innerHTML = `
     <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;">
-      ${c.owner ? `<div style="margin-bottom:6px;"><span style="color:var(--text-secondary)">Owner: </span><strong>${c.owner}</strong></div>` : ''}
-      ${c.phone ? `<div style="margin-bottom:6px;"><span style="color:var(--text-secondary)">Phone: </span><strong>${c.phone}</strong></div>` : ''}
-      ${c.notes ? `<div style="color:var(--text-secondary);font-size:12px;border-top:0.5px solid var(--divider);padding-top:8px;margin-top:6px;">${c.notes}</div>` : ''}
+      <div style="margin-bottom:6px;display:flex;align-items:baseline;gap:6px;"><span style="color:var(--text-secondary);white-space:nowrap;">Owner:</span><input class="ghost-input" id="log-edit-owner" value="${escHtml(c.owner||'')}" placeholder="—" data-cid="${c.id}" data-field="owner"></div>
+      <div style="margin-bottom:6px;display:flex;align-items:baseline;gap:6px;"><span style="color:var(--text-secondary);white-space:nowrap;">Phone:</span><input class="ghost-input" id="log-edit-phone" value="${escHtml(c.phone||'')}" placeholder="—" data-cid="${c.id}" data-field="phone"></div>
+      <div style="border-top:0.5px solid var(--divider);padding-top:8px;margin-top:6px;"><span style="color:var(--text-secondary);font-size:12px;">Notes:</span><textarea class="ghost-textarea" id="log-edit-notes" placeholder="—" data-cid="${c.id}" data-field="notes">${escHtml(c.notes||'')}</textarea></div>
     </div>
     <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${today()}"></div>
     <div style="margin-bottom:10px"><label>Outcome</label><select id="log-outcome">
@@ -856,6 +932,11 @@ function openLog(id) {
     </select></div>
     <div><label>Notes</label><textarea id="log-notes" placeholder="Objections, what they said, anything relevant..."></textarea></div>
   `;
+  // wire up ghost fields auto-save on blur
+  ['log-edit-owner','log-edit-phone','log-edit-notes'].forEach(fid => {
+    const el = document.getElementById(fid);
+    if (el) el.addEventListener('blur', () => ghostSaveField(el));
+  });
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn btn-primary" onclick="submitLog('${id}', ${dayNum})">Save call</button>
@@ -897,18 +978,28 @@ function openDetail(id) {
       </div>`).join('')
     : '<div style="font-size:12px;color:var(--text-tertiary)">No calls logged yet.</div>';
 
-  document.getElementById('modal-title').textContent = c.name;
+  document.getElementById('modal-title').innerHTML = `<input class="ghost-input" id="detail-edit-name" value="${escHtml(c.name)}" placeholder="Company name" data-cid="${c.id}" data-field="name" style="font-size:17px;font-weight:600;">`;
   document.getElementById('modal-body').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:13px">
-      <div><span style="color:var(--text-tertiary)">Owner: </span>${c.owner||'—'}</div>
-      <div><span style="color:var(--text-tertiary)">Phone: </span>${c.phone||'—'}</div>
-      <div><span style="color:var(--text-tertiary)">Problem: </span>${c.problem||'—'}</div>
-      <div><span style="color:var(--text-tertiary)">Offer: </span>${c.offer||'—'}</div>
-      <div><span style="color:var(--text-tertiary)">Status: </span>${getStatus(c)}</div>
-      <div><span style="color:var(--text-tertiary)">Next call: </span>${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</div>
-      ${c.website ? `<div><span style="color:var(--text-tertiary)">Website: </span><a href="${c.website.startsWith('http') ? c.website : 'https://'+c.website}" target="_blank" style="color:var(--accent)">${c.website}</a></div>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;font-size:13px">
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Owner</span><input class="ghost-input" id="detail-edit-owner" value="${escHtml(c.owner||'')}" placeholder="—" data-cid="${c.id}" data-field="owner"></div>
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Phone</span><input class="ghost-input" id="detail-edit-phone" value="${escHtml(c.phone||'')}" placeholder="—" data-cid="${c.id}" data-field="phone"></div>
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Problem</span><select class="ghost-select" id="detail-edit-problem" data-cid="${c.id}" data-field="problem">
+        <option value=""${!c.problem?'selected':''}>—</option>
+        <option${c.problem==='Missed calls'?' selected':''}>Missed calls</option>
+        <option${c.problem==='Low reviews'?' selected':''}>Low reviews</option>
+        <option${c.problem==='Website glitch'?' selected':''}>Website glitch</option>
+        <option${c.problem==='Multiple problems'?' selected':''}>Multiple problems</option>
+      </select></div>
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Offer</span><select class="ghost-select" id="detail-edit-offer" data-cid="${c.id}" data-field="offer">
+        <option value=""${!c.offer?'selected':''}>—</option>
+        <option${c.offer==='Receptionist demo'?' selected':''}>Receptionist demo</option>
+        <option${c.offer==='Website demo'?' selected':''}>Website demo</option>
+        <option${c.offer==='Review capture chat'?' selected':''}>Review capture chat</option>
+      </select></div>
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Website</span><input class="ghost-input" id="detail-edit-website" value="${escHtml(c.website||'')}" placeholder="—" data-cid="${c.id}" data-field="website"></div>
+      <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Next call</span><span style="font-size:13px">${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</span></div>
     </div>
-    ${c.notes ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:1rem;padding:8px 12px;background:var(--bg-secondary);border-radius:8px">${c.notes}</div>` : ''}
+    <div style="margin-bottom:1rem"><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:2px;">Notes</span><textarea class="ghost-textarea" id="detail-edit-notes" placeholder="—" data-cid="${c.id}" data-field="notes">${escHtml(c.notes||'')}</textarea></div>
     <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text-tertiary)">Call history</div>
     ${histHTML}
     <div style="margin-top:1rem"><label>Update status</label><select id="detail-status">
@@ -919,6 +1010,14 @@ function openDetail(id) {
       <option>Closed — lost</option>
     </select></div>
   `;
+  // wire ghost fields
+  ['detail-edit-name','detail-edit-owner','detail-edit-phone','detail-edit-website','detail-edit-notes','detail-edit-problem','detail-edit-offer'].forEach(fid => {
+    const el = document.getElementById(fid);
+    if (el) el.addEventListener('blur', () => ghostSaveField(el));
+  });
+  // also wire the title input
+  const titleInput = document.getElementById('detail-edit-name');
+  if (titleInput) titleInput.addEventListener('blur', () => ghostSaveField(titleInput));
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn btn-danger btn-sm" onclick="deleteCompany('${id}')">Delete</button>
     <button class="btn" onclick="closeModal()">Close</button>
@@ -926,6 +1025,23 @@ function openDetail(id) {
     ${dayNum ? `<button class="btn btn-primary" onclick="closeModal();openLog('${id}')">Log next call</button>` : ''}
   `;
   document.getElementById('modal-bg').classList.add('open');
+}
+
+// ── Ghost field helpers ───────────────────────────────────────
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+async function ghostSaveField(el) {
+  const cid = el.dataset.cid;
+  const field = el.dataset.field;
+  if (!cid || !field) return;
+  const c = companies.find(x => x.id === cid);
+  if (!c) return;
+  const newVal = el.tagName === 'SELECT' ? el.value : el.value.trim();
+  if (c[field] === newVal) return; // no change
+  c[field] = newVal;
+  await updateCompany(c);
+  showToast('Saved');
 }
 
 // ── Edit existing call ─────────────────────────────────────────
