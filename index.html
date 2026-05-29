@@ -830,9 +830,11 @@ function renderPipeline() {
 // ── All companies ─────────────────────────────────────────────
 function renderAll() {
   const q = (document.getElementById('search')?.value || '').toLowerCase();
+  const qNum = q.replace(/\D/g, '');
   const fs = document.getElementById('filter-status')?.value || '';
   const filtered = companies.filter(c => {
-    const mq = !q || c.name.toLowerCase().includes(q) || (c.owner||'').toLowerCase().includes(q);
+    const cPhoneNum = (c.phone || '').replace(/\D/g, '');
+    const mq = !q || c.name.toLowerCase().includes(q) || (c.owner||'').toLowerCase().includes(q) || (qNum && cPhoneNum.includes(qNum));
     const ms = !fs || getStatus(c) === fs;
     return mq && ms;
   });
