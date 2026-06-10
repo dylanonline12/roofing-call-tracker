@@ -695,11 +695,12 @@ function addDays(dateStr, n) {
 }
 function daysDiff(a, b) { return Math.round((new Date(a) - new Date(b)) / 86400000); }
 function nextCallDay(c) {
-  const done = (c.calls || []).map(x => x.day);
+  const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+  const done = calls.map(x => x.day);
   return DAYS.find(d => !done.includes(d)) || null;
 }
 function nextCallDate(c) {
-  const calls = c.calls || [];
+  const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
   if (!calls.length) return c.startDate;
   const last = calls[calls.length - 1];
   const nd = nextCallDay(c);
@@ -770,8 +771,16 @@ function renderToday() {
   if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
   
   const active = companies.filter(c => getStatus(c) === 'Active');
-  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod && (c.calls || []).length > 0; });
-  const todayDue = active.filter(c => nextCallDate(c) === tod || (nextCallDate(c) < tod && (c.calls || []).length === 0));
+  const overdue = active.filter(c => { 
+    const nd = nextCallDate(c); 
+    const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+    return nd && nd < tod && calls.length > 0; 
+  });
+  const todayDue = active.filter(c => {
+    const nd = nextCallDate(c);
+    const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+    return nd === tod || (nd < tod && calls.length === 0);
+  });
   const demos = companies.filter(c => c.status === 'Demo booked').length;
 
   const sToday = document.getElementById('s-today');
@@ -833,8 +842,10 @@ function renderAll() {
   const qNum = q.replace(/\D/g, '');
   const fs = document.getElementById('filter-status')?.value || '';
   const filtered = companies.filter(c => {
-    const cPhoneNum = (c.phone || '').replace(/\D/g, '');
-    const mq = !q || c.name.toLowerCase().includes(q) || (c.owner||'').toLowerCase().includes(q) || (qNum && cPhoneNum.includes(qNum));
+    const cPhoneNum = String(c.phone || '').replace(/\D/g, '');
+    const cName = String(c.name || '').toLowerCase();
+    const cOwner = String(c.owner || '').toLowerCase();
+    const mq = !q || cName.includes(q) || cOwner.includes(q) || (qNum && cPhoneNum.includes(qNum));
     const ms = !fs || getStatus(c) === fs;
     return mq && ms;
   });
