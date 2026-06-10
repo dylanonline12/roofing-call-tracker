@@ -672,7 +672,7 @@ function initFirebase(cfg) {
 function listenToData() {
   db.ref('companies').on('value', snap => {
     const val = snap.val() || {};
-    companies = Object.values(val);
+    companies = Object.values(val).filter(c => c && typeof c === 'object' && c.id);
     if (document.getElementById('tab-today').style.display !== 'none') renderToday();
     if (document.getElementById('tab-pipeline').style.display !== 'none') renderPipeline();
     if (document.getElementById('tab-all').style.display !== 'none') renderAll();
