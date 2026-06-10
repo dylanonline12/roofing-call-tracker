@@ -691,21 +691,33 @@ async function removeCompany(id) {
 // ── Helpers ───────────────────────────────────────────────────
 function today() { return new Date().toISOString().split('T')[0]; }
 function addDays(dateStr, n) {
-  const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().split('T')[0];
+  if (!dateStr) return today();
+  const d = new Date(dateStr); 
+  if (isNaN(d)) return today();
+  d.setDate(d.getDate() + n); 
+  return d.toISOString().split('T')[0];
 }
-function daysDiff(a, b) { return Math.round((new Date(a) - new Date(b)) / 86400000); }
+function daysDiff(a, b) { 
+  if (!a || !b) return 0;
+  const da = new Date(a), db = new Date(b);
+  if (isNaN(da) || isNaN(db)) return 0;
+  return Math.round((da - db) / 86400000); 
+}
+function getValidCalls(c) {
+  return (Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : [])).filter(x => x && typeof x === 'object');
+}
 function nextCallDay(c) {
-  const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+  const calls = getValidCalls(c);
   const done = calls.map(x => x.day);
   return DAYS.find(d => !done.includes(d)) || null;
 }
 function nextCallDate(c) {
-  const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
-  if (!calls.length) return c.startDate;
+  const calls = getValidCalls(c);
+  if (!calls.length) return c.startDate || today();
   const last = calls[calls.length - 1];
   const nd = nextCallDay(c);
   if (!nd) return null;
-  return addDays(last.date, DAY_GAPS[nd] || 2);
+  return addDays(last.date || c.startDate || today(), DAY_GAPS[nd] || 2);
 }
 function getStatus(c) {
   if (c.status) return c.status;
@@ -773,12 +785,12 @@ function renderToday() {
   const active = companies.filter(c => getStatus(c) === 'Active');
   const overdue = active.filter(c => { 
     const nd = nextCallDate(c); 
-    const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+    const calls = getValidCalls(c);
     return nd && nd < tod && calls.length > 0; 
   });
   const todayDue = active.filter(c => {
     const nd = nextCallDate(c);
-    const calls = Array.isArray(c.calls) ? c.calls : (c.calls ? Object.values(c.calls) : []);
+    const calls = getValidCalls(c);
     return nd === tod || (nd < tod && calls.length === 0);
   });
   const demos = companies.filter(c => c.status === 'Demo booked').length;
@@ -804,10 +816,18 @@ function renderToday() {
 function renderPipeline() {
   const tod = today();
   const active = companies.filter(c => getStatus(c) === 'Active');
-  const overdue = active.filter(c => { const nd = nextCallDate(c); return nd && nd < tod && (c.calls || []).length > 0; });
-  const todayDue = active.filter(c => nextCallDate(c) === tod || (nextCallDate(c) < tod && (c.calls || []).length === 0));
+  const overdue = active.filter(c => { 
+    const nd = nextCallDate(c); 
+    const calls = getValidCalls(c);
+    return nd && nd < tod && calls.length > 0; 
+  });
+  const todayDue = active.filter(c => {
+    const nd = nextCallDate(c);
+    const calls = getValidCalls(c);
+    return nd === tod || (nd < tod && calls.length === 0);
+  });
   const demos = companies.filter(c => c.status === 'Demo booked').length;
-  const calledToday = companies.filter(c => (c.calls || []).some(cl => cl.date === tod)).length;
+  const calledToday = companies.filter(c => getValidCalls(c).some(cl => cl.date === tod)).length;
 
   const sTotal = document.getElementById('s-total');
   if (sTotal) sTotal.textContent = companies.length;
