@@ -454,6 +454,53 @@ tr:hover td { background: var(--row-hover); }
   .funnel { grid-template-columns: repeat(3, 1fr); }
   .search-row { flex-direction: column; }
   .search-row select { width: 100%; }
+
+  /* Ghost inputs on mobile */
+  .ghost-input, .ghost-select { border-bottom: 0.5px solid rgba(120, 120, 128, 0.15); padding-bottom: 2px; }
+  .ghost-textarea { border: 0.5px solid rgba(120, 120, 128, 0.15); }
+
+  /* Bottom sheet modals */
+  .modal-bg { align-items: flex-end; }
+  .modal {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    padding: 24px 20px 40px 20px;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  /* Tables to Cards */
+  table, thead, tbody, th, td, tr { display: block; }
+  thead tr { display: none; }
+  tr {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--card-border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+  td {
+    border: none;
+    padding: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+  }
+  td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: left;
+    margin-right: 12px;
+  }
+  td:last-child { justify-content: stretch; padding-top: 12px; margin-top: 6px; border-top: 0.5px solid var(--divider); }
+  td:last-child button { width: 100%; }
 }
 </style>
 
@@ -887,13 +934,13 @@ function renderAll() {
       st === 'Loop closed' ? `<span class="badge badge-closed">Loop closed</span>` :
       `<span class="badge badge-closed">Lost</span>`;
     return `<tr>
-      <td style="font-weight:500">${c.name}</td>
-      <td>${c.owner||'—'}</td>
-      <td>${c.problem||'—'}</td>
-      <td>${dayNum ? 'Day ' + dayNum : 'Complete'}</td>
-      <td>${ndBadge}</td>
-      <td>${stBadge}</td>
-      <td><button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button></td>
+      <td data-label="Company" style="font-weight:500;text-align:left;">${c.name}</td>
+      <td data-label="Owner">${c.owner||'—'}</td>
+      <td data-label="Problem">${c.problem||'—'}</td>
+      <td data-label="Call day">${dayNum ? 'Day ' + dayNum : 'Complete'}</td>
+      <td data-label="Next follow-up">${ndBadge}</td>
+      <td data-label="Status">${stBadge}</td>
+      <td data-label=""><button class="btn btn-sm" onclick="openDetail('${c.id}')">View</button></td>
     </tr>`;
   }).join('');
 }
