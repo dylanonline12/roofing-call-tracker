@@ -689,7 +689,17 @@ let companies = [];
 let db = null;
 
 // ── Firebase config ──────────────────────────────────────────
+const HARDCODED_CONFIG = {
+  apiKey: "",         // e.g., "AIzaSy..."
+  authDomain: "",     // e.g., "your-app.firebaseapp.com"
+  projectId: "",      // e.g., "your-app-id"
+  databaseURL: ""     // e.g., "https://your-app-default-rtdb.firebaseio.com"
+};
+
 function loadConfig() {
+  if (HARDCODED_CONFIG.apiKey && HARDCODED_CONFIG.databaseURL) {
+    return HARDCODED_CONFIG;
+  }
   try { return JSON.parse(localStorage.getItem('fb_config') || 'null'); } catch { return null; }
 }
 function saveConfig() {
