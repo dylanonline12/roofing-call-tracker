@@ -598,6 +598,7 @@ tr:hover td { background: var(--row-hover); }
             <option>Missed calls</option>
             <option>Low reviews</option>
             <option>Website glitch</option>
+            <option>Speed to Lead</option>
             <option>Multiple problems</option>
           </select></div>
           <div><label>Next step offer</label><select id="f-offer">
@@ -605,6 +606,7 @@ tr:hover td { background: var(--row-hover); }
             <option>Receptionist demo</option>
             <option>Website demo</option>
             <option>Review capture chat</option>
+            <option>Implementation Walkthrough</option>
           </select></div>
         </div>
         <div class="form-row" style="grid-template-columns: 1fr;">
@@ -960,6 +962,7 @@ function autoFillOffer() {
   const off = document.getElementById('f-offer');
   if (prob === 'Missed calls') off.value = 'Receptionist demo';
   else if (prob === 'Low reviews') off.value = 'Review capture chat';
+  else if (prob === 'Speed to Lead') off.value = 'Implementation Walkthrough';
   else if (prob === 'Website glitch' || prob === 'Multiple problems') off.value = 'Website demo';
 }
 
@@ -1077,6 +1080,7 @@ function openDetail(id) {
         <option${c.problem==='Missed calls'?' selected':''}>Missed calls</option>
         <option${c.problem==='Low reviews'?' selected':''}>Low reviews</option>
         <option${c.problem==='Website glitch'?' selected':''}>Website glitch</option>
+        <option${c.problem==='Speed to Lead'?' selected':''}>Speed to Lead</option>
         <option${c.problem==='Multiple problems'?' selected':''}>Multiple problems</option>
       </select></div>
       <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Offer</span><select class="ghost-select" id="detail-edit-offer" data-cid="${c.id}" data-field="offer">
@@ -1084,6 +1088,7 @@ function openDetail(id) {
         <option${c.offer==='Receptionist demo'?' selected':''}>Receptionist demo</option>
         <option${c.offer==='Website demo'?' selected':''}>Website demo</option>
         <option${c.offer==='Review capture chat'?' selected':''}>Review capture chat</option>
+        <option${c.offer==='Implementation Walkthrough'?' selected':''}>Implementation Walkthrough</option>
       </select></div>
       <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Website</span><input class="ghost-input" id="detail-edit-website" value="${escHtml(c.website||'')}" placeholder="—" data-cid="${c.id}" data-field="website"></div>
       <div><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Next call</span><span style="font-size:13px">${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</span></div>
