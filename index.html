@@ -1012,7 +1012,8 @@ function openLog(id) {
     <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;">
       <div style="margin-bottom:6px;display:flex;align-items:baseline;gap:6px;"><span style="color:var(--text-secondary);white-space:nowrap;">Owner:</span><input class="ghost-input" id="log-edit-owner" value="${escHtml(c.owner||'')}" placeholder="—" data-cid="${c.id}" data-field="owner"></div>
       <div style="margin-bottom:6px;display:flex;align-items:baseline;gap:6px;"><span style="color:var(--text-secondary);white-space:nowrap;">Phone:</span><input class="ghost-input" id="log-edit-phone" value="${escHtml(c.phone||'')}" placeholder="—" data-cid="${c.id}" data-field="phone"></div>
-      <div style="border-top:0.5px solid var(--divider);padding-top:8px;margin-top:6px;"><span style="color:var(--text-secondary);font-size:12px;">Notes:</span><textarea class="ghost-textarea" id="log-edit-notes" placeholder="—" data-cid="${c.id}" data-field="notes">${escHtml(c.notes||'')}</textarea></div>
+      <div style="margin-bottom:6px;display:flex;align-items:baseline;gap:6px;"><span style="color:var(--text-secondary);white-space:nowrap;">Email:</span><input class="ghost-input" id="log-edit-email" value="${escHtml(c.email||'')}" placeholder="—" data-cid="${c.id}" data-field="email"></div>
+      <div style="border-top:0.5px solid var(--divider);padding-top:8px;margin-top:6px;"><span style="color:var(--text-secondary);font-size:12px;">Lead Notes:</span><textarea class="ghost-textarea" id="log-edit-notes" placeholder="—" data-cid="${c.id}" data-field="notes">${escHtml(c.notes||'')}</textarea></div>
     </div>
     <div style="margin-bottom:10px"><label>Call date</label><input type="date" id="log-date" value="${today()}"></div>
     <div style="margin-bottom:10px"><label>Outcome</label><select id="log-outcome">
@@ -1028,7 +1029,7 @@ function openLog(id) {
     <div><label>Notes</label><textarea id="log-notes" placeholder="Objections, what they said, anything relevant..."></textarea></div>
   `;
   // wire up ghost fields auto-save on blur
-  ['log-edit-owner','log-edit-phone','log-edit-notes'].forEach(fid => {
+  ['log-edit-owner','log-edit-phone','log-edit-email','log-edit-notes'].forEach(fid => {
     const el = document.getElementById(fid);
     if (el) el.addEventListener('blur', () => ghostSaveField(el));
   });
