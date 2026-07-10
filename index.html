@@ -694,7 +694,8 @@ const HARDCODED_CONFIG = {
   apiKey: "AIzaSyDbs_ehJ7s2sCWLJHc6S4BOkAY1h02MVHo",
   authDomain: "call-outreach-tracker.firebaseapp.com",
   projectId: "call-outreach-tracker",
-  databaseURL: "https://call-outreach-tracker-default-rtdb.firebaseio.com"
+  databaseURL: "https://call-outreach-tracker-default-rtdb.firebaseio.com",
+  googleSheetWebhookUrl: "" // Paste your Google Apps Script Web App URL here
 };
 
 function loadConfig() {
@@ -1048,6 +1049,10 @@ async function submitLog(id, dayNum) {
   else if (outcome === 'Reached owner — not interested') c.status = 'Closed — lost';
   else if (outcome === 'Reached owner — closed loop') c.status = 'Closed — lost';
   else if (outcome === 'Remove from list') c.status = 'Closed — lost';
+  else if (outcome === 'Gatekeeper — not transferred') {
+    c.status = 'Loop closed';
+    await sendToGoogleSheet(c, notes);
+  }
   await updateCompany(c);
   closeModal();
   showToast('Call logged');
@@ -1138,6 +1143,32 @@ async function ghostSaveField(el) {
   showToast('Saved');
 }
 
+async function sendToGoogleSheet(c, notes) {
+  const url = HARDCODED_CONFIG.googleSheetWebhookUrl;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        company: c.name || '',
+        owner: c.owner || '',
+        phone: c.phone || '',
+        problem: c.problem || '',
+        offer: c.offer || '',
+        notes: notes || '',
+        timestamp: new Date().toISOString()
+      })
+    });
+    showToast('Sent to Google Sheets');
+  } catch (e) {
+    console.error('Failed to send to Google Sheet:', e);
+  }
+}
+
 // ── Edit existing call ─────────────────────────────────────────
 function openEditCall(companyId, callIdx) {
   const c = companies.find(x => x.id === companyId);
@@ -1176,8 +1207,10 @@ async function saveEditCall(companyId, callIdx) {
   // Recompute status from all calls
   const hasDemo = c.calls.some(cl => cl.outcome === 'Reached owner — demo booked');
   const hasLost = c.calls.some(cl => cl.outcome === 'Reached owner — not interested' || cl.outcome === 'Reached owner — closed loop' || cl.outcome === 'Remove from list');
+  const hasGatekeeper = c.calls.some(cl => cl.outcome === 'Gatekeeper — not transferred');
   if (hasDemo) c.status = 'Demo booked';
   else if (hasLost && !hasDemo) c.status = 'Closed — lost';
+  else if (hasGatekeeper && !hasDemo) c.status = 'Loop closed';
   else c.status = null; // reset to active if no terminal outcome
   await updateCompany(c);
   showToast('Call updated');
