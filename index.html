@@ -772,6 +772,7 @@ function nextCallDay(c) {
   return DAYS.find(d => !done.includes(d)) || null;
 }
 function nextCallDate(c) {
+  if (c.customFollowUpDate) return c.customFollowUpDate;
   const calls = getValidCalls(c);
   if (!calls.length) return c.startDate || today();
   const last = calls[calls.length - 1];
@@ -1021,11 +1022,16 @@ function openLog(id) {
       <option>No answer — no voicemail</option>
       <option>Gatekeeper — not transferred</option>
       <option>Reached owner — advancing</option>
+      <option>Reached owner — callback requested</option>
       <option>Reached owner — demo booked</option>
       <option>Reached owner — not interested</option>
       <option>Reached owner — closed loop</option>
       <option>Remove from list</option>
     </select></div>
+    <div style="margin-bottom:10px;display:none;" id="log-custom-date-container">
+      <label>Follow-up date *</label>
+      <input type="date" id="log-custom-date">
+    </div>
     <div><label>Notes</label><textarea id="log-notes" placeholder="Objections, what they said, anything relevant..."></textarea></div>
   `;
   // wire up ghost fields auto-save on blur
@@ -1033,6 +1039,24 @@ function openLog(id) {
     const el = document.getElementById(fid);
     if (el) el.addEventListener('blur', () => ghostSaveField(el));
   });
+
+  const outcomeSel = document.getElementById('log-outcome');
+  const customDateContainer = document.getElementById('log-custom-date-container');
+  const customDateInput = document.getElementById('log-custom-date');
+  if (outcomeSel && customDateContainer && customDateInput) {
+    outcomeSel.addEventListener('change', () => {
+      if (outcomeSel.value === 'Reached owner — callback requested') {
+        customDateContainer.style.display = 'block';
+        if (typeof customDateInput.showPicker === 'function') {
+          try { customDateInput.showPicker(); } catch (e) {}
+        }
+      } else {
+        customDateContainer.style.display = 'none';
+        customDateInput.value = '';
+      }
+    });
+  }
+
   document.getElementById('modal-actions').innerHTML = `
     <button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn btn-primary" onclick="submitLog('${id}', ${dayNum})">Save call</button>
@@ -1046,6 +1070,13 @@ async function submitLog(id, dayNum) {
   const outcome = document.getElementById('log-outcome').value;
   const logDate = document.getElementById('log-date').value;
   const notes = document.getElementById('log-notes').value.trim();
+  const customDate = document.getElementById('log-custom-date') ? document.getElementById('log-custom-date').value : '';
+
+  if (outcome === 'Reached owner — callback requested' && !customDate) {
+    alert('Please select a follow-up date.');
+    return;
+  }
+
   if (!c.calls) c.calls = [];
   c.calls.push({ day: parseInt(dayNum), date: logDate, outcome, notes });
   if (outcome === 'Reached owner — demo booked') c.status = 'Demo booked';
@@ -1055,7 +1086,12 @@ async function submitLog(id, dayNum) {
   else if (outcome === 'Gatekeeper — not transferred') {
     c.status = 'Loop closed';
     await sendToGoogleSheet(c, notes);
+  } else if (outcome === 'Reached owner — callback requested') {
+    c.status = null;
   }
+
+  c.customFollowUpDate = customDate || null;
+
   await updateCompany(c);
   closeModal();
   showToast('Call logged');
@@ -1100,7 +1136,13 @@ function openDetail(id) {
         <option${c.offer==='Review capture chat'?' selected':''}>Review capture chat</option>
         <option${c.offer==='Implementation Walkthrough'?' selected':''}>Implementation Walkthrough</option>
       </select></div>
-      <div style="grid-column: span 2;"><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Next call</span><span style="font-size:13px">${nd ? `Day ${dayNum} on ${fmtDate(nd)}` : 'Complete'}</span></div>
+      <div style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <div style="flex: 1;">
+          <span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:1px;">Next call date ${c.customFollowUpDate ? '(Custom)' : ''}</span>
+          <input type="date" class="ghost-input" id="detail-edit-custom-followup" value="${c.customFollowUpDate || nextCallDate(c) || ''}" data-cid="${c.id}" data-field="customFollowUpDate" style="font-size:13px;width:100%;box-shadow:none;">
+        </div>
+        ${c.customFollowUpDate ? `<button class="btn btn-sm" style="flex-shrink:0;margin-top:12px;" onclick="clearCustomFollowUp('${c.id}')">Reset to Auto</button>` : ''}
+      </div>
     </div>
     <div style="margin-bottom:1rem"><span style="color:var(--text-tertiary);display:block;font-size:11px;margin-bottom:2px;">Notes</span><textarea class="ghost-textarea" id="detail-edit-notes" placeholder="—" data-cid="${c.id}" data-field="notes">${escHtml(c.notes||'')}</textarea></div>
     <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text-tertiary)">Call history</div>
@@ -1114,7 +1156,7 @@ function openDetail(id) {
     </select></div>
   `;
   // wire ghost fields
-  ['detail-edit-name','detail-edit-owner','detail-edit-phone','detail-edit-email','detail-edit-website','detail-edit-notes','detail-edit-problem','detail-edit-offer'].forEach(fid => {
+  ['detail-edit-name','detail-edit-owner','detail-edit-phone','detail-edit-email','detail-edit-website','detail-edit-notes','detail-edit-problem','detail-edit-offer','detail-edit-custom-followup'].forEach(fid => {
     const el = document.getElementById(fid);
     if (el) el.addEventListener('blur', () => ghostSaveField(el));
   });
@@ -1145,6 +1187,9 @@ async function ghostSaveField(el) {
   c[field] = newVal;
   await updateCompany(c);
   showToast('Saved');
+  if (field === 'customFollowUpDate') {
+    openDetail(cid);
+  }
 }
 
 async function sendToGoogleSheet(c, notes) {
@@ -1175,6 +1220,15 @@ async function sendToGoogleSheet(c, notes) {
   }
 }
 
+async function clearCustomFollowUp(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  c.customFollowUpDate = null;
+  await updateCompany(c);
+  showToast('Reverted to automatic scheduling');
+  openDetail(id);
+}
+
 // ── Edit existing call ─────────────────────────────────────────
 function openEditCall(companyId, callIdx) {
   const c = companies.find(x => x.id === companyId);
@@ -1189,6 +1243,7 @@ function openEditCall(companyId, callIdx) {
       <option ${cl.outcome==='No answer — no voicemail'?'selected':''}>No answer — no voicemail</option>
       <option ${cl.outcome==='Gatekeeper — not transferred'?'selected':''}>Gatekeeper — not transferred</option>
       <option ${cl.outcome==='Reached owner — advancing'?'selected':''}>Reached owner — advancing</option>
+      <option ${cl.outcome==='Reached owner — callback requested'?'selected':''}>Reached owner — callback requested</option>
       <option ${cl.outcome==='Reached owner — demo booked'?'selected':''}>Reached owner — demo booked</option>
       <option ${cl.outcome==='Reached owner — not interested'?'selected':''}>Reached owner — not interested</option>
       <option ${cl.outcome==='Reached owner — closed loop'?'selected':''}>Reached owner — closed loop</option>
@@ -1210,14 +1265,19 @@ async function saveEditCall(companyId, callIdx) {
   const logDate = document.getElementById('edit-log-date').value;
   const notes = document.getElementById('edit-log-notes').value.trim();
   c.calls[callIdx] = { ...c.calls[callIdx], date: logDate, outcome, notes };
-  // Recompute status from all calls
-  const hasDemo = c.calls.some(cl => cl.outcome === 'Reached owner — demo booked');
-  const hasLost = c.calls.some(cl => cl.outcome === 'Reached owner — not interested' || cl.outcome === 'Reached owner — closed loop' || cl.outcome === 'Remove from list');
-  const hasGatekeeper = c.calls.some(cl => cl.outcome === 'Gatekeeper — not transferred');
-  if (hasDemo) c.status = 'Demo booked';
-  else if (hasLost && !hasDemo) c.status = 'Closed — lost';
-  else if (hasGatekeeper && !hasDemo) c.status = 'Loop closed';
-  else c.status = null; // reset to active if no terminal outcome
+  
+  // Recompute status from the latest call outcome
+  const calls = getValidCalls(c);
+  if (calls.length) {
+    const lastOutcome = calls[calls.length - 1].outcome;
+    if (lastOutcome === 'Reached owner — demo booked') c.status = 'Demo booked';
+    else if (lastOutcome === 'Reached owner — not interested' || lastOutcome === 'Reached owner — closed loop' || lastOutcome === 'Remove from list') c.status = 'Closed — lost';
+    else if (lastOutcome === 'Gatekeeper — not transferred') c.status = 'Loop closed';
+    else c.status = null;
+  } else {
+    c.status = null;
+  }
+  
   await updateCompany(c);
   showToast('Call updated');
   openDetail(companyId);
